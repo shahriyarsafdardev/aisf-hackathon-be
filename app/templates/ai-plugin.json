@@ -9,10 +9,10 @@
   },
   "api": {
     "type": "openapi",
-    "url": "https://sphere-aisf-hackathon-be.herokuapp.com/.well-known/openapi.yaml",
+    "url": "https://sphere-aisf-hackathon-be.herokuapp.com/openapi.yaml",
     "is_user_authenticated": false
   },
-  "logo_url": "https://hire.lever.co/logo.png",
+  "logo_url": "https://cdn.lever.co/hire/img/lever-logo-new.png",
   "contact_email": "info@lever.co",
   "legal_info_url": "https://www.lever.co/legal/"
 }
