@@ -6,7 +6,6 @@ import httpx
 import json
 import dotenv
 import yaml
-from app.core.config import settings
 from app.services.s3 import fetch_s3_plugin_files
 
 dotenv.load_dotenv()
