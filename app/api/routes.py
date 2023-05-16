@@ -1,7 +1,6 @@
+from fastapi import APIRouter, Request, HTTPException, Path, Query
+from fastapi.responses import JSONResponse
 import os
-from fastapi import APIRouter, Request
-from fastapi.responses import JSONResponse, FileResponse
-from fastapi.exceptions import HTTPException
 import httpx
 import json
 import dotenv
@@ -39,3 +38,14 @@ async def get_opportunities():
         raise HTTPException(status_code=response.status_code)
 
     return response.json()
+
+@router.post('/ai-plugins/create')
+async def create_ai_plugin(company_name: str, documentation_start_url: str, documentation_base_url: str):
+    return {"status": "success"}
+
+@router.get('/ai-plugins/{company_name}')
+async def get_ai_plugin(company_name: str, poll_count: int):
+    if int(poll_count) > 10:
+        return f"{company_name}.base_url"
+    else:
+        return None
