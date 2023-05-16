@@ -45,7 +45,7 @@ async def get_opportunities():
     return response.json()
 
 @router.post('/ai-plugins/create')
-async def create_ai_plugin(company_name: str, documentation_start_url: str, documentation_base_url: str):
+async def create_ai_plugin(request: Request):
     return {"status": "success"}
 
 @router.get('/ai-plugins/{company_name}')
