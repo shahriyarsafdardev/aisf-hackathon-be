@@ -1,0 +1,10 @@
+venv/
+graveyard/
+*.pyc
+*.DS_Store
+.env
+__pycache__
+output/
+helpful-prompts.md
+env.json
+.tool-versions
