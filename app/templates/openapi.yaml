@@ -1,0 +1,121 @@
+openapi: 3.0.1
+info:
+  title: Lever Plugin
+  description: A plugin that allows the user to query their Lever hiring portal to get the opportunities.
+  version: "v1"
+servers:
+  - url: https://sphere-aisf-hackathon-be.herokuapp.com/
+paths:
+  /opportunities:
+    get:
+      operationId: getOpportunities
+      summary: Get the list of opportunities
+      parameters:
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/getOpportunitiesResponse"
+
+components:
+  schemas:
+    getOpportunitiesResponse:
+      type: object
+      properties:
+        opportunities:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                description: Unique ID of the opportunity.
+              name:
+                type: string
+                description: The name associated with the opportunity.
+              headline:
+                type: string
+                description: The headline of the opportunity.
+              contact:
+                type: string
+                description: Contact ID associated with the opportunity.
+              emails:
+                type: array
+                items:
+                  type: string
+                description: Array of emails associated with the opportunity.
+              phones:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    value:
+                      type: string
+                description: Array of phone numbers associated with the opportunity.
+              location:
+                type: string
+                description: The location of the opportunity.
+              links:
+                type: array
+                items:
+                  type: string
+                description: Array of links associated with the opportunity.
+              createdAt:
+                type: integer
+                description: The time when the opportunity was created.
+              lastInteractionAt:
+                type: integer
+                description: The time of the last interaction with the opportunity.
+              lastAdvancedAt:
+                type: integer
+                description: The time when the opportunity was last advanced.
+              snoozedUntil:
+                type: integer
+                description: The time until which the opportunity is snoozed.
+              archivedAt:
+                type: string
+                description: The time when the opportunity was archived.
+              archiveReason:
+                type: string
+                description: The reason for archiving the opportunity.
+              stage:
+                type: string
+                description: The stage ID of the opportunity.
+              owner:
+                type: string
+                description: The owner ID of the opportunity.
+              tags:
+                type: array
+                items:
+                  type: string
+                description: Array of tags associated with the opportunity.
+              sources:
+                type: array
+                items:
+                  type: string
+                description: The sources from which the opportunity was found.
+              origin:
+                type: string
+                description: The origin of the opportunity.
+              sourcedBy:
+                type: string
+                description: The source by which the opportunity was found.
+              applications:
+                type: array
+                items:
+                  type: string
+                description: Array of applications associated with the opportunity.
+              resume:
+                type: string
+                description: The resume associated with the opportunity.
+              followers:
+                type: array
+                items:
+                  type: string
+                description: Array of follower IDs associated with the opportunity.
+              dataProtection:
+                type: string
+                description: The data protection status of the opportunity.
+          description: The list of opportunities.
