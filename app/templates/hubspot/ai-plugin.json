@@ -1,0 +1,18 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "Hubspot Plugin",
+  "name_for_model": "hubspot_plugin",
+  "description_for_human": "A plugin that allows users to get all the contacts and companies from hubspot.",
+  "description_for_model": "A plugin that allows users to get all the contacts and companies from hubspot.",
+  "auth": {
+    "type": "none"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "https://sphere-aisf-hackathon-be.herokuapp.com/openapi.yaml",
+    "is_user_authenticated": false
+  },
+  "logo_url": "https://help.hubspot.com/hubfs/HubSpot_Logos/HSLogo_color.svg",
+  "contact_email": "media@hubspot.com",
+  "legal_info_url": "https://legal.hubspot.com/legal-stuff/"
+}

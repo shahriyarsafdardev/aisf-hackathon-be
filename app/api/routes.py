@@ -12,6 +12,8 @@ from fastapi import APIRouter, BackgroundTasks, Request, HTTPException
 from fastapi import APIRouter, Request, HTTPException
 
 
+from app.services.hubspot_service import set_hubspot_headers
+
 dotenv.load_dotenv()
 router = APIRouter()
 
@@ -23,7 +25,7 @@ def base_url(request: Request):
 @router.get('/.well-known/ai-plugin.json')
 async def plugin_manifest(request: Request):
     try:
-        json_file_path = 'app/templates/ai-plugin.json'
+        json_file_path = 'app/templates/lever/ai-plugin.json'
         with open(json_file_path, 'r') as json_file:
             data = json.load(json_file)
         data['api']['url'] = f"{base_url(request)}/openapi.yaml"
@@ -36,7 +38,7 @@ async def plugin_manifest(request: Request):
 @router.get('/openapi.yaml')
 async def plugin_spec(request: Request):
     try:
-        yaml_file_path = 'app/templates/openapi.yaml'
+        yaml_file_path = 'app/templates/lever/openapi.yaml'
         with open(yaml_file_path, 'r') as yaml_file:
             data = yaml.safe_load(yaml_file)
         data['servers'][0]['url'] = base_url(request)
@@ -134,6 +136,29 @@ async def get_users():
     }
     async with httpx.AsyncClient() as client:
         response = await client.get(url, auth=(api_key, ""), params=params)
+
+
+@router.get('/hubspot/contacts')
+async def get_hubspot_contacts():
+    url = "https://api.hubapi.com/crm/v3/objects/contacts"
+    headers = set_hubspot_headers()
+    
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url, headers=headers)
+
+    if response.status_code != 200:
+        raise HTTPException(status_code=response.status_code)
+
+    return response.json()
+
+
+@router.get('/hubspot/companies')
+async def get_hubspot_companies():
+    url = "https://api.hubapi.com/crm/v3/objects/companies"
+    headers = set_hubspot_headers()
+    
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url, headers=headers)
 
     if response.status_code != 200:
         raise HTTPException(status_code=response.status_code)
