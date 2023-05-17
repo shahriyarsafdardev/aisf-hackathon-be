@@ -1,15 +1,21 @@
-from fastapi import APIRouter, Request, HTTPException
-from fastapi.responses import JSONResponse
-import os
-import httpx
-import json
-import dotenv
+from app.services.scrapping.scrapper import process_domain
+from app.services.s3 import create_bulk_file
+from app.services.postgres_db import insert_connector
 import yaml
+import dotenv
+import json
+import httpx
+import os
+from psycopg2.errors import UniqueViolation
+from fastapi.responses import JSONResponse
+from fastapi import APIRouter, BackgroundTasks, Request, HTTPException
+from fastapi import APIRouter, Request, HTTPException
+
 
 dotenv.load_dotenv()
 router = APIRouter()
 
-# Method to get base url
+
 def base_url(request: Request):
     return f"{request.url.scheme}://{request.url.netloc}"
 
@@ -40,8 +46,24 @@ async def plugin_spec(request: Request):
 
 
 @router.post('/ai-plugins/create')
-async def create_ai_plugin(request: Request):
+async def create_ai_plugin(request: Request, background_tasks: BackgroundTasks):
+    data = await request.json()
+    # try:
+    #     start_url = data['documentation_start_url']
+    #     base_url = data['documentation_base_url']
+    #     insert_connector(
+    #         data['name'], start_url, base_url)
+
+    #     create_bulk_file(base_url)
+
+    #     background_tasks.add_task(
+    #         process_domain, base_url, [start_url], base_url)
+
     return {"status": "success"}
+
+    # except UniqueViolation as e:
+    #     raise HTTPException(
+    #         status_code=400, detail="A connector with the same name or start url already exists.")
 
 
 @router.get('/ai-plugins/{company_name}')
