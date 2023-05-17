@@ -1,7 +1,7 @@
 openapi: 3.0.1
 info:
   title: Hubspot Plugin
-  description: A plugin that allows users to get all the contacts and companies from hubspot.
+  description: A plugin that allows users to get all the contacts and companies from Hubspot.
   version: "v1"
 servers:
   - url: https://sphere-aisf-hackathon-be.herokuapp.com
@@ -10,7 +10,7 @@ paths:
     get:
       operationId: get_hubspot_contacts
       summary: Get the list of contacts
-      parameters:
+      parameters: []
       responses:
         "200":
           description: OK
@@ -22,7 +22,7 @@ paths:
     get:
       operationId: get_hubspot_companies
       summary: Get the list of companies
-      parameters:
+      parameters: []
       responses:
         "200":
           description: OK
@@ -43,37 +43,42 @@ components:
               id:
                 type: string
                 description: Unique ID of the contact.
-              createdAt: 
-                type: dateTime
+              createdAt:
+                type: string
+                format: date-time
                 description: Creation date of the contact.
               updatedAt:
-                type: dateTime
+                type: string
+                format: date-time
                 description: Last update date of the contact.
               archived:
                 type: boolean
                 description: Indicates if the contact is archived.
               properties:
                 type: object
-                description: Object conatining properties of contact.
-                  createdate: 
-                    type: dateTime
+                description: Object containing properties of the contact.
+                properties:
+                  createdate:
+                    type: string
+                    format: date-time
                     description: Date the contact was created.
-                  email: 
+                  email:
                     type: string
                     description: Email of the contact.
-                  firstname: 
+                  firstname:
                     type: string
                     description: First name of the contact.
-                  lastname: 
+                  lastname:
                     type: string
                     description: Last name of the contact.
                   lastmodifieddate:
-                    type: dateTime
+                    type: string
+                    format: date-time
                     description: Date the contact was last modified.
                   hs_object_id:
                     type: string
-                    description: id of hubspot object.
-          description: The list of contacts result.
+                    description: ID of the Hubspot object.
+          description: The list of contact results.
     getHubspotCompaniesResponse:
       type: object
       properties:
@@ -85,31 +90,35 @@ components:
               id:
                 type: string
                 description: Unique ID of the company.
-              createdAt: 
-                type: dateTime
+              createdAt:
+                type: string
+                format: date-time
                 description: Creation date of the company.
               updatedAt:
-                type: dateTime
+                type: string
+                format: date-time
                 description: Last update date of the company.
               archived:
                 type: boolean
                 description: Indicates if the company is archived.
               properties:
                 type: object
-                description: Object conatining properties of company.
-                  createdate: 
-                    type: dateTime
+                description: Object containing properties of the company.
+                properties:
+                  createdate:
+                    type: string
+                    format: date-time
                     description: Date at which the company was created.
-                  domain: 
+                  domain:
                     type: string
                     description: Domain of the company.
-                  name: 
+                  name:
                     type: string
                     description: Name of the company.
                   hs_lastmodifieddate:
-                    type: dateTime
+                    type: string
+                    format: date-time
                     description: Date at which the company was last modified.
                   hs_object_id:
                     type: string
-                    description: id of hubspot object.
-          description: The list of companies result.
+                    description: ID of the Hubspot object.
