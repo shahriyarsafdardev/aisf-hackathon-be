@@ -18,17 +18,22 @@ dotenv.load_dotenv()
 router = APIRouter()
 
 
-def base_url(request: Request):
-    return f"{request.url.scheme}://{request.url.netloc}"
+def get_base_url(request: Request):
+    port = request.url.netloc.split(":")[1]
+    return {"port": port, "base_url": f"{request.url.scheme}://{request.url.netloc}"}
 
 
 @router.get('/.well-known/ai-plugin.json')
 async def plugin_manifest(request: Request):
     try:
-        json_file_path = 'app/templates/lever/ai-plugin.json'
+        base_url = get_base_url(request)
+        if base_url['port'] == '8000':
+            json_file_path = 'app/templates/lever/ai-plugin.json'
+        if base_url['port'] == '8001':
+            json_file_path = 'app/templates/hubspot/ai-plugin.json'
         with open(json_file_path, 'r') as json_file:
             data = json.load(json_file)
-        data['api']['url'] = f"{base_url(request)}/openapi.yaml"
+        data['api']['url'] = f"{base_url['base_url']}/openapi.yaml"
     except Exception as e:
         return f"Error fetching the plugin file: {e}"
 
@@ -38,10 +43,14 @@ async def plugin_manifest(request: Request):
 @router.get('/openapi.yaml')
 async def plugin_spec(request: Request):
     try:
-        yaml_file_path = 'app/templates/lever/openapi.yaml'
+        base_url = get_base_url(request)
+        if base_url['port'] == '8000':
+            yaml_file_path = 'app/templates/lever/openapi.yaml'
+        if base_url['port'] == '8001':
+            yaml_file_path = 'app/templates/hubspot/openapi.yaml'
         with open(yaml_file_path, 'r') as yaml_file:
             data = yaml.safe_load(yaml_file)
-        data['servers'][0]['url'] = base_url(request)
+        data['servers'][0]['url'] = base_url['base_url']
     except Exception as e:
         return f"Error fetching the plugin file: {e}"
     return JSONResponse(content=data)
@@ -71,17 +80,17 @@ async def create_ai_plugin(request: Request, background_tasks: BackgroundTasks):
 @router.get('/ai-plugins/{company_name}')
 async def get_ai_plugin(request: Request, company_name: str, poll_count: int):
     if int(poll_count) > 10:
-        return base_url(request)
+        return get_base_url(request)
     else:
         return None
 
 
-@router.get('/opportunities')
+@router.get('/lever/opportunities')
 async def get_opportunities():
     url = "https://api.lever.co/v1/opportunities"
     api_key = os.getenv('LEVER_API_KEY')
     params = {
-        'limit': 25
+        'limit': 20
     }
     async with httpx.AsyncClient() as client:
         response = await client.get(url, auth=(api_key, ""), params=params)
@@ -92,7 +101,7 @@ async def get_opportunities():
     return response.json()
 
 
-@router.get('/postings')
+@router.get('/lever/postings')
 async def get_postings():
     url = "https://api.lever.co/v1/postings"
     api_key = os.getenv('LEVER_API_KEY')
@@ -111,7 +120,7 @@ async def get_postings():
     return data
 
 
-@router.get('/users')
+@router.get('/lever/users')
 async def get_users():
     url = "https://api.lever.co/v1/users"
     api_key = os.getenv('LEVER_API_KEY')
@@ -123,11 +132,10 @@ async def get_users():
 
     if response.status_code != 200:
         raise HTTPException(status_code=response.status_code)
-    breakpoint()
     return response.json()
 
 
-@router.get('/opportunities/{opportunity_id}/interviews')
+@router.get('/lever/opportunities/{opportunity_id}/interviews')
 async def get_users():
     url = "https://api.lever.co/v1/opportunities/{opportunity_id}/interviews"
     api_key = os.getenv('LEVER_API_KEY')
@@ -142,7 +150,7 @@ async def get_users():
 async def get_hubspot_contacts():
     url = "https://api.hubapi.com/crm/v3/objects/contacts"
     headers = set_hubspot_headers()
-    
+
     async with httpx.AsyncClient() as client:
         response = await client.get(url, headers=headers)
 
@@ -156,7 +164,7 @@ async def get_hubspot_contacts():
 async def get_hubspot_companies():
     url = "https://api.hubapi.com/crm/v3/objects/companies"
     headers = set_hubspot_headers()
-    
+
     async with httpx.AsyncClient() as client:
         response = await client.get(url, headers=headers)
 

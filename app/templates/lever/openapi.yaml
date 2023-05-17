@@ -6,7 +6,7 @@ info:
 servers:
   - url: https://sphere-aisf-hackathon-be.herokuapp.com
 paths:
-  /opportunities:
+  /lever/opportunities:
     get:
       operationId: getOpportunities
       summary: Get the list of opportunities
@@ -18,7 +18,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/getOpportunitiesResponse"
-  /postings:
+  /lever/postings:
     get:
       operationId: getPostings
       summary: Get the list of postings
@@ -30,7 +30,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/getPostingsResponse"
-  /users:
+  /lever/users:
     get:
       summary: Get user information
       responses:
@@ -40,7 +40,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/getUsersResponse"
-  /opportunities/{opportunity}/interviews:
+  /lever/opportunities/{opportunity}/interviews:
     get:
       summary: Get interview information of an opportunity
       parameters:
