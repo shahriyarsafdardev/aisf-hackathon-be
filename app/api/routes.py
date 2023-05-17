@@ -13,6 +13,7 @@ router = APIRouter()
 def base_url(request: Request):
     return f"{request.url.scheme}://{request.url.netloc}"
 
+
 @router.get('/.well-known/ai-plugin.json')
 async def plugin_manifest(request: Request):
     try:
@@ -25,6 +26,7 @@ async def plugin_manifest(request: Request):
 
     return JSONResponse(content=data)
 
+
 @router.get('/openapi.yaml')
 async def plugin_spec(request: Request):
     try:
@@ -36,12 +38,26 @@ async def plugin_spec(request: Request):
         return f"Error fetching the plugin file: {e}"
     return JSONResponse(content=data)
 
+
+@router.post('/ai-plugins/create')
+async def create_ai_plugin(request: Request):
+    return {"status": "success"}
+
+
+@router.get('/ai-plugins/{company_name}')
+async def get_ai_plugin(request: Request, company_name: str, poll_count: int):
+    if int(poll_count) > 10:
+        return base_url(request)
+    else:
+        return None
+
+
 @router.get('/opportunities')
 async def get_opportunities():
     url = "https://api.lever.co/v1/opportunities"
     api_key = os.getenv('LEVER_API_KEY')
     params = {
-        'limit': 20
+        'limit': 25
     }
     async with httpx.AsyncClient() as client:
         response = await client.get(url, auth=(api_key, ""), params=params)
@@ -51,13 +67,53 @@ async def get_opportunities():
 
     return response.json()
 
-@router.post('/ai-plugins/create')
-async def create_ai_plugin(request: Request):
-    return {"status": "success"}
 
-@router.get('/ai-plugins/{company_name}')
-async def get_ai_plugin(request: Request, company_name: str, poll_count: int):
-    if int(poll_count) > 10:
-        return base_url(request)
-    else:
-        return None
+@router.get('/postings')
+async def get_postings():
+    url = "https://api.lever.co/v1/postings"
+    api_key = os.getenv('LEVER_API_KEY')
+    params = {
+        'limit': 25
+    }
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url, auth=(api_key, ""), params=params)
+
+    if response.status_code != 200:
+        raise HTTPException(status_code=response.status_code)
+    data = response.json()['data']
+    for item in data:
+        item['content']['description'] = item['content']['description'][0:100]
+        item['content']['descriptionHtml'] = item['content']['descriptionHtml'][0:100]
+    return data
+
+
+@router.get('/users')
+async def get_users():
+    url = "https://api.lever.co/v1/users"
+    api_key = os.getenv('LEVER_API_KEY')
+    params = {
+        'limit': 50
+    }
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url, auth=(api_key, ""), params=params)
+
+    if response.status_code != 200:
+        raise HTTPException(status_code=response.status_code)
+    breakpoint()
+    return response.json()
+
+
+@router.get('/opportunities/{opportunity_id}/interviews')
+async def get_users():
+    url = "https://api.lever.co/v1/opportunities/{opportunity_id}/interviews"
+    api_key = os.getenv('LEVER_API_KEY')
+    params = {
+        'limit': 50
+    }
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url, auth=(api_key, ""), params=params)
+
+    if response.status_code != 200:
+        raise HTTPException(status_code=response.status_code)
+
+    return response.json()

@@ -18,6 +18,45 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/getOpportunitiesResponse"
+  /postings:
+    get:
+      operationId: getPostings
+      summary: Get the list of postings
+      parameters:
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/getPostingsResponse"
+  /users:
+    get:
+      summary: Get user information
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/getUsersResponse"
+  /opportunities/{opportunity}/interviews:
+    get:
+      summary: Get interview information of an opportunity
+      parameters:
+        - in: path
+          name: opportunity
+          schema:
+            type: string
+          required: true
+          description: The ID of the opportunity.
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/getInterviewsResponse"
 
 components:
   schemas:
@@ -119,3 +158,221 @@ components:
                 type: string
                 description: The data protection status of the opportunity.
           description: The list of opportunities.
+    getPostingsResponse:
+      type: object
+      properties:
+        postings:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                description: Unique ID of the posting.
+              text:
+                type: string
+                description: The title of the posting.
+              createdAt:
+                type: integer
+                description: The time when the posting was created.
+              updatedAt:
+                type: integer
+                description: The time when the posting was last updated.
+              user:
+                type: string
+                description: The user ID associated with the posting.
+              owner:
+                type: string
+                description: The owner ID of the posting.
+              hiringManager:
+                type: string
+                description: The hiring manager ID associated with the posting.
+              confidentiality:
+                type: string
+                description: The confidentiality status of the posting.
+              categories:
+                type: object
+                properties:
+                  team:
+                    type: string
+                  department:
+                    type: string
+                  location:
+                    type: string
+                  commitment:
+                    type: string
+                  level:
+                    type: string
+                description: The categories associated with the posting.
+              content:
+                type: object
+                properties:
+                  lists:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        text:
+                          type: string
+                        content:
+                          type: string
+                  closing:
+                    type: string
+                  closingHtml:
+                    type: string
+                description: The content details of the posting.
+              tags:
+                type: array
+                items:
+                  type: string
+                description: Array of tags associated with the posting.
+              state:
+                type: string
+                description: The state of the posting.
+              distributionChannels:
+                type: array
+                items:
+                  type: string
+                description: The distribution channels for the posting.
+              reqCode:
+                type: string
+                description: The requisition code of the posting.
+              requisitionCodes:
+                type: array
+                items:
+                  type: string
+                description: The list of requisition codes associated with the posting.
+              urls:
+                type: object
+                properties:
+                  list:
+                    type: string
+                  show:
+                    type: string
+                  apply:
+                    type: string
+                description: The URLs associated with the posting.
+              workplaceType:
+                type: string
+                description: The workplace type of the posting.
+          description: The list of job postings.
+    getUsersResponse:
+      type: object
+      properties:
+        users:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                description: Unique ID of the user.
+              name:
+                type: string
+                description: Full name of the user.
+              username:
+                type: string
+                description: The username of the user.
+              email:
+                type: string
+                description: Email address of the user.
+              createdAt:
+                type: integer
+                description: The time when the user was created.
+              deactivatedAt:
+                type: integer
+                description: The time when the user was deactivated.
+              externalDirectoryId:
+                type: string
+                description: The external directory ID of the user.
+              accessRole:
+                type: string
+                description: The access role of the user.
+              photo:
+                type: string
+                description: The URL of the user's photo.
+              linkedContactIds:
+                type: array
+                items:
+                  type: string
+                description: Array of linked contact IDs associated with the user.
+          description: User details
+    getInterviewsResponse:
+      type: object
+      properties:
+        interviews:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                description: Unique ID of the interview.
+              panel:
+                type: string
+                description: Panel ID of the interview.
+              subject:
+                type: string
+                description: The subject of the interview.
+              note:
+                type: string
+                description: The note of the interview.
+              interviewers:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    email:
+                      type: string
+                      description: Email address of the interviewer.
+                    id:
+                      type: string
+                      description: Unique ID of the interviewer.
+                    name:
+                      type: string
+                      description: Full name of the interviewer.
+              timezone:
+                type: string
+                description: The timezone of the interview.
+              createdAt:
+                type: integer
+                description: The time when the interview was created.
+              date:
+                type: integer
+                description: The date of the interview.
+              duration:
+                type: integer
+                description: The duration of the interview in minutes.
+              location:
+                type: string
+                description: The location of the interview.
+              feedbackTemplate:
+                type: string
+                description: The feedback template ID.
+              feedbackForms:
+                type: array
+                items:
+                  type: string
+                description: Array of feedback form IDs.
+              feedbackReminder:
+                type: string
+                description: The feedback reminder setting.
+              user:
+                type: string
+                description: The user ID who scheduled the interview.
+              stage:
+                type: string
+                description: The stage ID of the interview.
+              canceledAt:
+                type: integer
+                nullable: true
+                description: The time when the interview was canceled. This could be null if the interview is not canceled.
+              postings:
+                type: array
+                items:
+                  type: string
+                description: Array of posting IDs related to the interview.
+              hasNext:
+                type: boolean
+                description: A boolean value indicating if there are more data.
+            description: A list of interview details associated with an opportunity
