@@ -1,14 +1,17 @@
-from fastapi import APIRouter, Request, HTTPException, Path, Query
+from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import JSONResponse
 import os
 import httpx
 import json
 import dotenv
 import yaml
-from app.services.s3 import fetch_s3_plugin_files
 
 dotenv.load_dotenv()
 router = APIRouter()
+
+# Method to get base url
+def base_url(request: Request):
+    return f"{request.url.scheme}://{request.url.netloc}"
 
 @router.get('/.well-known/ai-plugin.json')
 async def plugin_manifest(request: Request):
@@ -16,7 +19,7 @@ async def plugin_manifest(request: Request):
         json_file_path = 'app/templates/ai-plugin.json'
         with open(json_file_path, 'r') as json_file:
             data = json.load(json_file)
-        data['api']['url'] = f"{os.getenv('BASE_URL')}/openapi.yaml"
+        data['api']['url'] = f"{base_url(request)}/openapi.yaml"
     except Exception as e:
         return f"Error fetching the plugin file: {e}"
 
@@ -28,7 +31,7 @@ async def plugin_spec(request: Request):
         yaml_file_path = 'app/templates/openapi.yaml'
         with open(yaml_file_path, 'r') as yaml_file:
             data = yaml.safe_load(yaml_file)
-        data['servers'][0]['url'] = os.getenv('BASE_URL')
+        data['servers'][0]['url'] = base_url(request)
     except Exception as e:
         return f"Error fetching the plugin file: {e}"
     return JSONResponse(content=data)
@@ -53,8 +56,8 @@ async def create_ai_plugin(request: Request):
     return {"status": "success"}
 
 @router.get('/ai-plugins/{company_name}')
-async def get_ai_plugin(company_name: str, poll_count: int):
+async def get_ai_plugin(request: Request, company_name: str, poll_count: int):
     if int(poll_count) > 10:
-        return f"{company_name}.base_url"
+        return base_url(request)
     else:
         return None
