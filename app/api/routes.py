@@ -10,13 +10,27 @@ from app.services.s3 import fetch_s3_plugin_files
 dotenv.load_dotenv()
 router = APIRouter()
 
+# Helper Method
+def get_plugin_files(request: Request, file_name: str):
+    company_name = request.url.netloc.split('.')[0]
+    sub_domain, domain = request.url.netloc.split('.', 1)
+    file_content = fetch_s3_plugin_files(company_name, file_name)
+    if file_content is None:
+        company_name = 'lever'
+        sub_domain = 'lever'
+        file_content = fetch_s3_plugin_files(company_name, file_name)
+    return {
+        'file_content': file_content,
+        'sub_domain': sub_domain,
+        'domain': domain
+    }
+
 @router.get('/.well-known/ai-plugin.json')
 async def plugin_manifest(request: Request):
     try:
-        json_file_path = 'app/templates/ai-plugin.json'
-        with open(json_file_path, 'r') as json_file:
-            data = json.load(json_file)
-        data['api']['url'] = f"{os.getenv('BASE_URL')}/openapi.yaml"
+        response = get_plugin_files(request, 'ai-plugin.json')
+        data = json.loads(response['file_content'])
+        data['api']['url'] = f"{request.url.scheme}://{response['sub_domain']}.{response['domain']}/openapi.yaml"
     except Exception as e:
         return f"Error fetching the plugin file: {e}"
 
@@ -25,10 +39,9 @@ async def plugin_manifest(request: Request):
 @router.get('/openapi.yaml')
 async def plugin_spec(request: Request):
     try:
-        yaml_file_path = 'app/templates/openapi.yaml'
-        with open(yaml_file_path, 'r') as yaml_file:
-            data = yaml.safe_load(yaml_file)
-        data['servers'][0]['url'] = os.getenv('BASE_URL')
+        response = get_plugin_files(request, 'openapi.yaml')
+        data = yaml.safe_load(response['file_content'])
+        data['servers'][0]['url'] = f"{request.url.scheme}://{response['sub_domain']}.{response['domain']}"
     except Exception as e:
         return f"Error fetching the plugin file: {e}"
     return JSONResponse(content=data)
@@ -53,8 +66,9 @@ async def create_ai_plugin(request: Request):
     return {"status": "success"}
 
 @router.get('/ai-plugins/{company_name}')
-async def get_ai_plugin(company_name: str, poll_count: int):
-    if int(poll_count) > 10:
-        return f"{company_name}.base_url"
+async def get_ai_plugin(request: Request, company_name: str, poll_count: int):
+    sub_domain = f"{request.url.scheme}://{company_name}.{request.url.netloc}"
+    if int(poll_count) > 1:
+        return sub_domain
     else:
         return None
