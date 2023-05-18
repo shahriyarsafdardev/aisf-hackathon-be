@@ -1,9 +1,8 @@
 import re
 from urllib.parse import urlparse
 from collections import Counter
-from app.services.documentation_parser import query
 from app.core.logging import getLogger
-from app.services.connector_generation.schema_generator import link_search, clean_urls
+from app.services.plugin_generator.schema_generator import link_search, clean_urls
 from app.services.openai import completion
 
 

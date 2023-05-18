@@ -1,6 +1,7 @@
+from app.services.plugin import plugin_handler
 from app.services.scrapping.scrapper import process_domain
 from app.services.s3 import create_bulk_file
-from app.services.postgres_db import insert_connector
+from app.services.postgres_db import get_connector_details, insert_connector
 import yaml
 import dotenv
 import json
@@ -57,14 +58,31 @@ async def plugin_spec(request: Request):
 
 
 @router.post('/ai-plugins/create')
-async def create_ai_plugin(request: Request):
-    return {"status": "success"}
+async def create_ai_plugin(request: Request, background_tasks: BackgroundTasks):
+    data = await request.json()
+    try:
+        start_url = data['documentation_start_url']
+        base_url = data['documentation_base_url']
+        insert_connector(
+            data['name'], start_url, base_url)
+
+        create_bulk_file(base_url)
+
+        background_tasks.add_task(
+            plugin_handler, data['name'], start_url, base_url)
+
+        return {"status": "success"}
+
+    except UniqueViolation as e:
+        raise HTTPException(
+            status_code=400, detail="A connector with the same name or start url already exists.")
 
 
 @router.get('/ai-plugins/{company_name}')
-async def get_ai_plugin(request: Request, company_name: str, poll_count: int):
-    if int(poll_count) > 10:
-        return get_base_url(request)
+async def get_ai_plugin(company_name: str, poll_count: int):
+    res = get_connector_details(company_name)
+    if res[2]:
+        return res[2]
     else:
         return None
 

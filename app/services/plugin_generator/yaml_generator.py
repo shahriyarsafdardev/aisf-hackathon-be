@@ -1,18 +1,11 @@
 from app.core.logging import getLogger
-import json  # Add this import at the beginning of your file.
 import io
 import re
-import zipfile
-from dotenv import load_dotenv
-from tqdm import tqdm
-from app.services.documentation_parser import query
 from app.services.openai import ask_gpt
 from app.services.pinecone_db import get_domain_name
-from app.services.s3 import list_objects, upload_to_s3, get_s3_file_content, bucket_name
 from app.services.postgres_db import update_connector_low_code_export_url
-from app.services.connector_generation.schema_generator import generate_schemas, make_slug
-from app.services.connector_generation.base_url_generator import get_base_url
-from app.services.connector_generation.manifest_generator import get_manifest
+from app.services.s3 import list_objects, upload_to_s3, get_s3_file_content, bucket_name
+from app.services.plugin_generator.base_url_generator import get_base_url
 
 logger = getLogger()
 format = """  endpoint:
@@ -28,6 +21,15 @@ format = """  endpoint:
                 type: array
                 items:
                   $ref: '#/components/schemas/activity_types'"""
+
+
+def make_slug(s):
+    s = s.lower()
+    s = re.sub(r'\.', '-', s)
+    s = re.sub(r'[^a-z0-9 -]', '', s)
+    s = re.sub(r'\s+', '-', s)
+    s = s.strip()
+    return s
 
 
 async def create_plugin_yaml(connector_name, base_documentation_url):
@@ -58,5 +60,11 @@ servers:
 
     upload_to_s3(io.BytesIO((file_content + output).encode('utf-8')),
                  f"{folder_name}/openapi.yaml")
+
+    update_connector_low_code_export_url(
+        f"https://{bucket_name}.s3.amazonaws.com/{folder_name}/openapi.yaml", base_documentation_url)
+
+    logger.info(
+        f"OpenAI yaml file link: https://{bucket_name}.s3.amazonaws.com/{folder_name}/openapi.yaml")
 
     return

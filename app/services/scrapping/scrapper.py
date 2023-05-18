@@ -95,7 +95,8 @@ def process_page(db_connection, domain, url, base_url):
         file_extension = get_file_extension(content_type)
         if file_extension == 'html':
             try:
-                child_links += extract_links(domain, response.text, base_url)
+                child_links += extract_links(db_connection,
+                                             domain, response.text, base_url)
             except Exception as e:
                 logger.info(f"An error occurred while extracting links: {e}")
 
@@ -217,7 +218,7 @@ def get_domain(url):
         return None
 
 
-def extract_links(domain, html_content, base_url):
+def extract_links(db_connection, domain, html_content, base_url):
     try:
         soup = BeautifulSoup(html_content, 'html.parser')
         header = soup.find('header') or soup.find('div', class_='header')
@@ -236,7 +237,7 @@ def extract_links(domain, html_content, base_url):
                     href = urljoin(domain, href)
 
                 parsed_url = urlparse(href)
-                if parsed_url.scheme in ['http', 'https'] and verify_base_url(base_url, href):
+                if parsed_url.scheme in ['http', 'https'] and verify_base_url(base_url, href) and not page_exists_with_url(db_connection, href):
                     parsed_url = parsed_url._replace(query='', fragment='')
                     clean_url = urlunparse(parsed_url)
                     links.append(clean_url)

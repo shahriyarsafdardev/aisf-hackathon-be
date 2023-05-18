@@ -6,10 +6,10 @@ import concurrent.futures
 from collections import defaultdict
 from dotenv import load_dotenv
 from urllib.parse import urlparse, urlunparse
-from app.services.documentation_parser import query
+from app.services.scrapping.documentation_parser import query
 from app.services.s3 import list_objects, read_object
 from app.core.logging import getLogger
-from app.services.link_parser import link_search_s3
+from app.services.scrapping.link_parser import link_search_s3
 
 
 load_dotenv()
