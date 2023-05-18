@@ -57,24 +57,8 @@ async def plugin_spec(request: Request):
 
 
 @router.post('/ai-plugins/create')
-async def create_ai_plugin(request: Request, background_tasks: BackgroundTasks):
-    data = await request.json()
-    # try:
-    #     start_url = data['documentation_start_url']
-    #     base_url = data['documentation_base_url']
-    #     insert_connector(
-    #         data['name'], start_url, base_url)
-
-    #     create_bulk_file(base_url)
-
-    #     background_tasks.add_task(
-    #         process_domain, base_url, [start_url], base_url)
-
+async def create_ai_plugin(request: Request):
     return {"status": "success"}
-
-    # except UniqueViolation as e:
-    #     raise HTTPException(
-    #         status_code=400, detail="A connector with the same name or start url already exists.")
 
 
 @router.get('/ai-plugins/{company_name}')
