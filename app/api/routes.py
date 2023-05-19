@@ -3,7 +3,7 @@ from app.services.hubspot_service import set_hubspot_headers
 from app.services.scrapping.documentation_parser import query_pinecone
 from app.services.scrapping.scrapper import process_domain
 from app.services.s3 import create_bulk_file
-from app.services.postgres_db import fetch_user, find_user, get_connector_details, insert_connector
+from app.services.postgres_db import create_new_user, fetch_user, find_user, get_connector_details, insert_connector
 import yaml
 import dotenv
 import json
@@ -36,8 +36,7 @@ async def login(request: Request):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Incorrect email or password"
         )
-
-    hashed_pass = data[0][1]
+    hashed_pass = user[0][1]
     if not verify_password(data['password'], hashed_pass):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -45,8 +44,8 @@ async def login(request: Request):
         )
 
     return {
-        "access_token": create_access_token(user['email']),
-        "refresh_token": create_refresh_token(user['email']),
+        "access_token": create_access_token(data['email']),
+        "refresh_token": create_refresh_token(data['email']),
     }
 
 
@@ -55,7 +54,7 @@ async def create_user(request: Request):
     data = await request.json()
     users_count = find_user(data['email'])
     if users_count == 0:
-        create_user(data['email'], get_hashed_password(
+        create_new_user(data['email'], get_hashed_password(
             data['password']), str(uuid4()))
     else:
         return {"message": "User already exists"}

@@ -177,12 +177,12 @@ def find_user(email):
 
 
 def fetch_user(email):
-    select_query = "SELECT COUNT(*) FROM users WHERE email = %s;"
+    select_query = "SELECT * FROM users WHERE email = %s;"
     result = execute_query(select_query, (email,),  fetch=True)
-    return result[0][0]
+    return result
 
 
-def create_user(email, password, id):
+def create_new_user(email, password, id):
     select_query = "INSERT INTO users (email, password, id) VALUES (%s, %s, %s);"
     result = execute_query(select_query, (email, password, id),  fetch=False)
     return result
