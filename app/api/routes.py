@@ -1,4 +1,6 @@
 from app.services.plugin import plugin_handler
+from app.services.hubspot_service import set_hubspot_headers
+from app.services.scrapping.documentation_parser import query_pinecone
 from app.services.scrapping.scrapper import process_domain
 from app.services.s3 import create_bulk_file
 from app.services.postgres_db import get_connector_details, insert_connector
@@ -9,11 +11,9 @@ import httpx
 import os
 from psycopg2.errors import UniqueViolation
 from fastapi.responses import JSONResponse
-from fastapi import APIRouter, BackgroundTasks, Request, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Request, HTTPException, Response
 from fastapi import APIRouter, Request, HTTPException
 
-
-from app.services.hubspot_service import set_hubspot_headers
 
 dotenv.load_dotenv()
 router = APIRouter()
@@ -27,11 +27,15 @@ def get_base_url(request: Request):
 @router.get('/.well-known/ai-plugin.json')
 async def plugin_manifest(request: Request):
     try:
-        base_url = get_base_url(request)
-        if base_url['port'] == '8000':
-            json_file_path = 'app/templates/lever/ai-plugin.json'
-        if base_url['port'] == '8001':
-            json_file_path = 'app/templates/hubspot/ai-plugin.json'
+        base_url = {"base_url": f"{request.url.scheme}://{request.url.netloc}"}
+        json_file_path = 'app/templates/sphere/ai-plugin.json'
+        # base_url = get_base_url(request)
+        # if base_url['port'] == '8000':
+        #     json_file_path = 'app/templates/lever/ai-plugin.json'
+        # if base_url['port'] == '8001':
+        #     json_file_path = 'app/templates/hubspot/ai-plugin.json'
+        # if base_url['port'] == '8002':
+        #     json_file_path = 'app/templates/sphere/ai-plugin.json'
         with open(json_file_path, 'r') as json_file:
             data = json.load(json_file)
         data['api']['url'] = f"{base_url['base_url']}/openapi.yaml"
@@ -44,11 +48,15 @@ async def plugin_manifest(request: Request):
 @router.get('/openapi.yaml')
 async def plugin_spec(request: Request):
     try:
-        base_url = get_base_url(request)
-        if base_url['port'] == '8000':
-            yaml_file_path = 'app/templates/lever/openapi.yaml'
-        if base_url['port'] == '8001':
-            yaml_file_path = 'app/templates/hubspot/openapi.yaml'
+        base_url = {"base_url": f"{request.url.scheme}://{request.url.netloc}"}
+        yaml_file_path = 'app/templates/sphere/openapi.yaml'
+        # base_url = get_base_url(request)
+        # if base_url['port'] == '8000':
+        #     yaml_file_path = 'app/templates/lever/openapi.yaml'
+        # if base_url['port'] == '8001':
+        #     yaml_file_path = 'app/templates/hubspot/openapi.yaml'
+        # if base_url['port'] == '8002':
+        #     yaml_file_path = 'app/templates/sphere/openapi.yaml'
         with open(yaml_file_path, 'r') as yaml_file:
             data = yaml.safe_load(yaml_file)
         data['servers'][0]['url'] = base_url['base_url']
@@ -174,3 +182,9 @@ async def get_hubspot_companies():
         raise HTTPException(status_code=response.status_code)
 
     return response.json()
+
+
+@router.get('/query')
+async def sphere_query(query: str):
+    answer = query_pinecone(query)
+    return {"answer": answer}
