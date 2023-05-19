@@ -3,7 +3,7 @@ from app.services.hubspot_service import set_hubspot_headers
 from app.services.scrapping.documentation_parser import query_pinecone
 from app.services.scrapping.scrapper import process_domain
 from app.services.s3 import create_bulk_file
-from app.services.postgres_db import get_connector_details, insert_connector
+from app.services.postgres_db import fetch_user, find_user, get_connector_details, insert_connector
 import yaml
 import dotenv
 import json
@@ -11,12 +11,56 @@ import httpx
 import os
 from psycopg2.errors import UniqueViolation
 from fastapi.responses import JSONResponse
-from fastapi import APIRouter, BackgroundTasks, Request, HTTPException, Response
-from fastapi import APIRouter, Request, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Request, HTTPException, status, Depends
+from fastapi.responses import RedirectResponse
+from fastapi.security import OAuth2PasswordRequestForm
+from app.utils import (
+    get_hashed_password,
+    create_access_token,
+    create_refresh_token,
+    verify_password
+)
+from uuid import uuid4
 
 
 dotenv.load_dotenv()
 router = APIRouter()
+
+
+@router.post('/login')
+async def login(request: Request):
+    data = await request.json()
+    user = fetch_user(data['email'])
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Incorrect email or password"
+        )
+
+    hashed_pass = data[0][1]
+    if not verify_password(data['password'], hashed_pass):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Incorrect email or password"
+        )
+
+    return {
+        "access_token": create_access_token(user['email']),
+        "refresh_token": create_refresh_token(user['email']),
+    }
+
+
+@router.post('/signup')
+async def create_user(request: Request):
+    data = await request.json()
+    users_count = find_user(data['email'])
+    if users_count == 0:
+        create_user(data['email'], get_hashed_password(
+            data['password']), str(uuid4()))
+    else:
+        return {"message": "User already exists"}
+
+    return {"message": "Success"}
 
 
 def get_base_url(request: Request):

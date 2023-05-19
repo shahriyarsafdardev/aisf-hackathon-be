@@ -168,3 +168,21 @@ def does_connector_exist(name):
     select_query = "SELECT EXISTS(SELECT 1 FROM connectors WHERE name = %s);"
     result = execute_query(select_query, (name,))
     return result[0][0]
+
+
+def find_user(email):
+    select_query = "SELECT COUNT(*) FROM users WHERE email = %s;"
+    result = execute_query(select_query, (email,),  fetch=True)
+    return result[0][0]
+
+
+def fetch_user(email):
+    select_query = "SELECT COUNT(*) FROM users WHERE email = %s;"
+    result = execute_query(select_query, (email,),  fetch=True)
+    return result[0][0]
+
+
+def create_user(email, password, id):
+    select_query = "INSERT INTO users (email, password, id) VALUES (%s, %s, %s);"
+    result = execute_query(select_query, (email, password, id),  fetch=False)
+    return result
