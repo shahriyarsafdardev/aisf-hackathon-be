@@ -1,0 +1,35 @@
+openapi: 3.0.1
+info:
+  title: Sphere auth Plugin
+  description: A plugin that allows the user to query anything to Sphere.
+  version: "v1"
+servers:
+  - url: https://d50be6c442e0.ngrok.app
+paths:
+  /query:
+    get:
+      operationId: getQuery
+      summary: Get the answer of any query
+      parameters:
+        - in: query
+          name: query
+          schema:
+            type: string
+          required: true
+          description: The query string.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/getQueryResponse"
+
+components:
+  schemas:
+    getQueryResponse:
+      type: object
+      properties:
+        answer:
+          type: string
+          description: The answer of the query.

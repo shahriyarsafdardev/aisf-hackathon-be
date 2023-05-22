@@ -44,7 +44,9 @@ def execute_query(query, params=None, fetch=True):
         cursor.close()
         conn.close()
 
-        return result
+        if fetch:
+            return result
+        return True
     except Exception as e:
         logger.error(f"An error occurred while executing the query: {e}")
         return None
@@ -168,3 +170,77 @@ def does_connector_exist(name):
     select_query = "SELECT EXISTS(SELECT 1 FROM connectors WHERE name = %s);"
     result = execute_query(select_query, (name,))
     return result[0][0]
+
+
+def find_user(email):
+    select_query = "SELECT COUNT(*) FROM users WHERE email = %s;"
+    result = execute_query(select_query, (email,),  fetch=True)
+    return result[0][0]
+
+
+def fetch_user(email):
+    select_query = "SELECT * FROM users WHERE email = %s;"
+    result = execute_query(select_query, (email,),  fetch=True)
+    return result
+
+
+def fetch_user_by_id(user_id):
+    select_query = "SELECT * FROM users WHERE id = %s;"
+    result = execute_query(select_query, (user_id,),  fetch=True)
+    return result
+
+
+def create_new_user(email, password, fisrtname, lastname):
+    select_query = "INSERT INTO users (email, password, first_name, last_name) VALUES ( %s, %s, %s, %s);"
+    result = execute_query(
+        select_query, (email, password, fisrtname, lastname),  fetch=False)
+    return result
+
+
+def get_content_sources():
+    select_query = "SELECT * from content_sources;"
+    return execute_query(select_query, fetch=True)
+
+
+def get_content_sources_for_user(user_id):
+    query = """
+    SELECT content_sources.*
+    FROM content_sources
+    INNER JOIN user_content_sources ON content_sources.id = user_content_sources.content_source_id
+    WHERE user_content_sources.user_id = %s
+    """
+    return execute_query(query, params=(user_id,))
+
+
+def add_user_content_source(user_id, content_source_id):
+    if check_user_and_content_source_existence(user_id, content_source_id) == False:
+        return False
+    query = """
+    INSERT INTO user_content_sources (user_id, content_source_id)
+    SELECT %s, %s
+    WHERE NOT EXISTS (
+        SELECT 1 FROM user_content_sources 
+        WHERE user_id = %s AND content_source_id = %s
+    )
+    """
+    params = (user_id, content_source_id, user_id, content_source_id)
+    return execute_query(query, params=params, fetch=False)
+
+
+def remove_user_content_source(user_id, content_source_id):
+    query = """
+    DELETE FROM user_content_sources 
+    WHERE user_id = %s AND content_source_id = %s
+    """
+    params = (user_id, content_source_id)
+    return execute_query(query, params=params, fetch=False)
+
+
+def check_user_and_content_source_existence(user_id, content_source_id):
+    user_exists = execute_query(
+        "SELECT 1 FROM users WHERE id = %s", params=(user_id,), fetch=True)
+    content_source_exists = execute_query(
+        "SELECT 1 FROM content_sources WHERE id = %s", params=(content_source_id,), fetch=True)
+    if content_source_exists and user_exists:
+        return True
+    return False
