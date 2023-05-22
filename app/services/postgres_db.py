@@ -181,8 +181,13 @@ def fetch_user(email):
     result = execute_query(select_query, (email,),  fetch=True)
     return result
 
+def fetch_user_by_id(user_id):
+    select_query = "SELECT * FROM users WHERE id = %s;"
+    result = execute_query(select_query, (user_id,),  fetch=True)
+    return result
 
-def create_new_user(email, password, id):
-    select_query = "INSERT INTO users (email, password, id) VALUES (%s, %s, %s);"
-    result = execute_query(select_query, (email, password, id),  fetch=False)
+
+def create_new_user(email, password, fisrtname, lastname):
+    select_query = "INSERT INTO users (email, password, first_name, last_name) VALUES ( %s, %s, %s, %s);"
+    result = execute_query(select_query, (email, password, fisrtname, lastname),  fetch=False)
     return result
