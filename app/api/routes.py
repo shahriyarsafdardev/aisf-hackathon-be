@@ -1,26 +1,30 @@
+from uuid import uuid4
+from app.utils import (
+    get_hashed_password,
+    create_access_token,
+    verify_password
+)
+from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.responses import RedirectResponse
+from fastapi import APIRouter, BackgroundTasks, Request, HTTPException, Response, status, Depends
+from fastapi.responses import JSONResponse
+from psycopg2.errors import UniqueViolation
+import os
+import httpx
+import json
+import dotenv
+import yaml
+from app.services.postgres_db import add_user_content_source, get_connector_details, get_content_sources, get_content_sources_for_user, insert_connector, remove_user_content_source
+from app.services.postgres_db import create_new_user, fetch_user, fetch_user_by_id, find_user, get_connector_details, insert_connector
 import urllib.parse
 from app.services.plugin import plugin_handler
 from app.services.hubspot_service import set_hubspot_headers
 from app.services.scrapping.documentation_parser import query_pinecone
 from app.services.scrapping.scrapper import process_domain
 from app.services.s3 import create_bulk_file
-from app.services.postgres_db import create_new_user, fetch_user, fetch_user_by_id, find_user, get_connector_details, insert_connector
-import yaml
-import dotenv
-import json
-import httpx
-import os
-from psycopg2.errors import UniqueViolation
-from fastapi.responses import JSONResponse
-from fastapi import APIRouter, BackgroundTasks, Request, HTTPException, Response, status, Depends
-from fastapi.responses import RedirectResponse
-from fastapi.security import OAuth2PasswordRequestForm
-from app.utils import (
-    get_hashed_password,
-    create_access_token,
-    verify_password
-)
-from uuid import uuid4
+<< << << < Updated upstream
+== == == =
+>>>>>> > Stashed changes
 
 
 dotenv.load_dotenv()
@@ -286,3 +290,49 @@ async def login(request: Request):
         return {"user_id": None}
 
     return {"user_id": user[0][0]}
+
+
+@router.get('/content_sources')
+async def content_sources():
+    return get_content_sources()
+
+
+@router.get('/user_content_sources')
+async def user_content_sources(user_id: str):
+    return get_content_sources_for_user(user_id)
+
+
+@router.post('/subscribe_content_source')
+async def subscribe_content_source(request: Request):
+    data = await request.json()
+    response = add_user_content_source(
+        data['user_id'], data['content_source_id'])
+    if response:
+        return JSONResponse(
+            status_code=200,
+            content={'status': "success",
+                     "message": "Subscribed to content successfully!"}
+        )
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail={"status": "failure", "error": "Something went wrong!"}
+        )
+
+
+@router.delete('/unsubscribe_content_source')
+async def unsubscribe_content_source(request: Request):
+    data = await request.json()
+    response = remove_user_content_source(
+        data['user_id'], data['content_source_id'])
+    if response:
+        return JSONResponse(
+            status_code=200,
+            content={'status': "success",
+                     "message": "Unsubscribed from content successfully!"}
+        )
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail={"status": "failure", "error": "Something went wrong!"}
+        )
