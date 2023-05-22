@@ -22,16 +22,13 @@ from app.services.hubspot_service import set_hubspot_headers
 from app.services.scrapping.documentation_parser import query_pinecone
 from app.services.scrapping.scrapper import process_domain
 from app.services.s3 import create_bulk_file
-<< << << < Updated upstream
-== == == =
->>>>>> > Stashed changes
 
 
 dotenv.load_dotenv()
 router = APIRouter()
 
 
-@router.get('/login')
+@router.post('/login')
 async def login(request: Request):
     data = await request.json()
     user = fetch_user(data['email'])
@@ -41,12 +38,11 @@ async def login(request: Request):
             detail="Incorrect email or password"
         )
     hashed_pass = user[0][2]
-    if not verify_password(data['password'], hashed_pass):
+    if data['password'] != hashed_pass:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Incorrect email or password"
         )
-
     return {
         "access_token": create_access_token(data['email'])
     }
