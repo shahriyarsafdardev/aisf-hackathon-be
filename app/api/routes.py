@@ -1,4 +1,6 @@
 from uuid import uuid4
+from app.services.openai import create_embedding
+from app.services.pinecone_db import get_topk_with_filters
 from app.utils import (
     get_hashed_password,
     create_access_token,
@@ -17,8 +19,6 @@ import yaml
 from app.services.postgres_db import add_user_content_source, get_connector_details, get_content_sources, get_content_sources_for_user, insert_connector, remove_user_content_source
 from app.services.postgres_db import create_new_user, fetch_user, fetch_user_by_id, find_user, get_connector_details, insert_connector, get_user_content_source_ids
 import urllib.parse
-from app.services.scrapping.documentation_parser import query_pinecone
-from app.services.s3 import create_bulk_file
 from app.authentication.authenticate import authenticate
 
 
@@ -120,7 +120,8 @@ async def sphere_query(query: str, payload: dict = Depends(authenticate)):
         'content_source_id': {'$in': content_source_ids}
     }
 
-    answer = query_pinecone(query, filters=filters)
+    embedded_query = create_embedding(query)
+    answer = get_topk_with_filters(embedded_query, filters)
 
     return {"answer": answer}
 
