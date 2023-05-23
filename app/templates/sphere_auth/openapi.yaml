@@ -4,7 +4,7 @@ info:
   description: A plugin that allows the user to query anything to Sphere.
   version: "v1"
 servers:
-  - url: https://sphere-aisf-hackathon-be.herokuapp.com/
+  - url: https://sphere-aisf-hackathon-be.herokuapp.com
 paths:
   /query:
     get:

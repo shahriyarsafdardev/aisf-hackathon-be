@@ -11,7 +11,7 @@
     "authorization_url": "https://sphere-aisf-hackathon-be.herokuapp.com/oauth/token",
     "authorization_content_type": "application/json",
     "verification_tokens": {
-        "openai": "52071cc8bb934bbeada0a4b3d7ebb154"
+        "openai": "2ae0fa943e784600a288abf77f26060c"
     }
 },
   "api": {
