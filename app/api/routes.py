@@ -20,7 +20,7 @@ import json
 import dotenv
 import yaml
 from app.services.postgres_db import add_user_content_source, get_content_sources, get_content_sources_for_user, get_stripe_price_id, remove_user_content_source, create_new_user, fetch_user, fetch_user_by_id, find_user, get_user_content_source_ids
-from app.services.postgres_db import add_user_content_source, get_connector_details, get_content_sources, get_all_content_sources, get_stripe_price_id, insert_connector, remove_user_content_source
+from app.services.postgres_db import add_user_content_source, get_connector_details, get_content_sources, get_all_content_sources, get_stripe_price_id, insert_connector, remove_user_content_source, remove_user_content_source
 from app.services.postgres_db import create_new_user, fetch_user, fetch_user_by_id, find_user, get_connector_details, insert_connector
 import urllib.parse
 from app.authentication.authenticate import authenticate
@@ -219,7 +219,8 @@ async def subscribe_content_source(request: Request, token: str = Depends(get_to
 async def unsubscribe_content_source(request: Request, token: str = Depends(get_token)):
     data = await request.json()
     user_id = fetch_user(token)[0][0]
-    is_canceled = cancel_subscription(data['subscription_id'])
+    subscription_id = get_subscription_id(user_id, data['content_source_id'])
+    is_canceled = cancel_subscription(subscription_id)
     if is_canceled is None:
         raise HTTPException(
             status_code=400,
@@ -230,11 +231,7 @@ async def unsubscribe_content_source(request: Request, token: str = Depends(get_
         user_id, data['content_source_id'])
 
     if response:
-        return JSONResponse(
-            status_code=200,
-            content={'status': "success",
-                     "message": "Unsubscribed from content successfully!"}
-        )
+        return get_all_content_sources(user_id)
     else:
         raise HTTPException(
             status_code=400,

@@ -278,3 +278,17 @@ def get_stripe_price_id(content_source_id):
     WHERE id = %s
     """
     return execute_query(query, params=(content_source_id,), fetch=True)[0][0]
+
+
+def get_subscription_id(user_id, content_source_id):
+    query = """
+    SELECT subscription_id FROM user_content_sources 
+    WHERE user_id = %s AND content_source_id = %s
+    """
+    params = (user_id, content_source_id)
+    result = execute_query(query, params=params, fetch=True)
+
+    if result and len(result) > 0:
+        return result[0][0]
+
+    return None
