@@ -18,15 +18,16 @@ from app.services.postgres_db import add_user_content_source, get_connector_deta
 from app.services.postgres_db import create_new_user, fetch_user, fetch_user_by_id, find_user, get_connector_details, insert_connector, get_user_content_source_ids
 import urllib.parse
 from app.services.scrapping.documentation_parser import query_pinecone
-from app.services.scrapping.scrapper import process_domain
 from app.services.s3 import create_bulk_file
+from app.authentication.authenticate import authenticate
 
 
 dotenv.load_dotenv()
 router = APIRouter()
 
-# Note that we should gradually transition our routes into distinct files 
+# Note that we should gradually transition our routes into distinct files
 # I have started this work with ai_plugin_routes.py, auth_routes.py and content_source_routes.py
+
 
 @router.post('/login')
 async def login(request: Request):
@@ -38,7 +39,7 @@ async def login(request: Request):
             detail="Incorrect email or password"
         )
     hashed_pass = user[0][2]
-    if data['password'] != hashed_pass:
+    if not verify_password(data['password'], hashed_pass):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Incorrect email or password"
@@ -108,26 +109,20 @@ async def plugin_spec(request: Request):
 
 
 @router.get('/query')
-async def sphere_query(request: Request, query: str):
-    data = await request.json()
-    user_id = data['user_id']
-
+async def sphere_query(query: str, payload: dict = Depends(authenticate)):
+    user_id = payload
     content_source_ids = get_user_content_source_ids(user_id)
 
     if not content_source_ids:
-        return {"answer" : "No content"}
+        return {"answer": "No content"}
 
     filters = {
         'content_source_id': {'$in': content_source_ids}
     }
 
     answer = query_pinecone(query, filters=filters)
+
     return {"answer": answer}
-
-
-# Use while creating sphere auth plugin
-OPENAI_CLIENT_ID = "abc123"
-OPENAI_CLIENT_SECRET = "abc123"
 
 
 @router.get("/oauth/authorize")
@@ -151,11 +146,6 @@ async def oauth(request: Request):
 
 @router.post("/oauth/token")
 async def oauth_exchange(request: Request):
-    # if request["client_id"] != OPENAI_CLIENT_ID:
-    #     raise RuntimeError("bad client ID")
-    # if request["client_secret"] != OPENAI_CLIENT_SECRET:
-    #     raise RuntimeError("bad client secret")
-
     data = await request.json()
     user = fetch_user_by_id(data['code'])
     if len(user) is None:
@@ -182,17 +172,17 @@ async def login(request: Request):
 
 
 @router.get('/content_sources')
-async def content_sources():
+async def content_sources(payload: dict = Depends(authenticate)):
     return get_content_sources()
 
 
 @router.get('/user_content_sources')
-async def user_content_sources(user_id: str):
+async def user_content_sources(user_id: str, payload: dict = Depends(authenticate)):
     return get_content_sources_for_user(user_id)
 
 
 @router.post('/subscribe_content_source')
-async def subscribe_content_source(request: Request):
+async def subscribe_content_source(request: Request, payload: dict = Depends(authenticate)):
     data = await request.json()
     response = add_user_content_source(
         data['user_id'], data['content_source_id'])
@@ -210,7 +200,7 @@ async def subscribe_content_source(request: Request):
 
 
 @router.delete('/unsubscribe_content_source')
-async def unsubscribe_content_source(request: Request):
+async def unsubscribe_content_source(request: Request, payload: dict = Depends(authenticate)):
     data = await request.json()
     response = remove_user_content_source(
         data['user_id'], data['content_source_id'])
@@ -225,3 +215,56 @@ async def unsubscribe_content_source(request: Request):
             status_code=400,
             detail={"status": "failure", "error": "Something went wrong!"}
         )
+
+
+@router.post('/gpt_google_login')
+async def gpt_google_login(request: Request):
+    data = await request.json()
+    try:
+        email = verify_google_user(data.get('id_token'))
+        user = fetch_user(email)
+
+        return {"user_id": user[0][0]}
+
+    except httpx.HTTPError as e:
+        raise HTTPException(
+            status_code=400, detail='Invalid Google sign-in token')
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail='Internal server error')
+
+
+@router.post('/google_login')
+async def google_login(request: Request):
+    data = await request.json()
+    try:
+        email = verify_google_user(data.get('id_token'))
+
+        return {
+            "access_token": create_access_token(email)
+        }
+
+    except httpx.HTTPError as e:
+        raise HTTPException(
+            status_code=400, detail='Invalid Google sign-in token')
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail='Internal server error')
+
+
+def verify_google_user(google_token: str):
+    response = httpx.get(
+        f'https://oauth2.googleapis.com/tokeninfo?id_token={google_token}')
+    response.raise_for_status()
+    token_info = response.json()
+
+    email = token_info.get('email')
+    user_count = find_user(email)
+    if user_count == 0:
+        firstname = token_info.get('given_name')
+        lastname = token_info.get('family_name')
+
+        create_new_user(email, get_hashed_password(
+            os.getenv('DEFAULT_PASSWORD')), firstname, lastname)
+
+    return email

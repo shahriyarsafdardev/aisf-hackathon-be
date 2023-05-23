@@ -1,10 +1,10 @@
 openapi: 3.0.1
 info:
-  title: Sphere auth Plugin
+  title: Sphere
   description: A plugin that allows the user to query anything to Sphere.
   version: "v1"
 servers:
-  - url: https://d50be6c442e0.ngrok.app
+  - url: https://sphere-aisf-hackathon-be.herokuapp.com/
 paths:
   /query:
     get:
