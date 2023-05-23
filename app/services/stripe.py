@@ -16,7 +16,7 @@ def get_stripe_product(price_id):
         'product_id': product['id'],
         'name': product['name'],
         'description': product['description'],
-        'amount': price['unit_amount'],
+        'amount': price['unit_amount']/100,
     }
 
 
@@ -31,13 +31,20 @@ def get_subscription_intent(price_id, email):
         payment_settings={'save_default_payment_method': 'on_subscription'},
         expand=['latest_invoice.payment_intent'],
     )
-    return {'subscription_id': subscription.id, 'client_Secret': subscription.latest_invoice.payment_intent.client_secret, 'customer_id': customer.id}
+    return {'subscription_id': subscription.id, 'client_secret': subscription.latest_invoice.payment_intent.client_secret, 'customer_id': customer.id}
 
 
 def create_customer(email):
-    user = fetch_user(email)
+    user = fetch_user(email)[0]
     customer = stripe.Customer.create(
         email=email,
         name=f"{user[3]} {user[4]}",
     )
     return customer
+
+
+def cancel_subscription(subscription_id):
+    subscription = stripe.Subscription.delete(subscription_id)
+    if subscription:
+        return True
+    return None
