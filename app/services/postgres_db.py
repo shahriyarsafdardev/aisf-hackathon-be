@@ -253,3 +253,11 @@ def get_user_content_source_ids(user_id):
     if not results:
         return None
     return [result[0] for result in results]
+
+
+def get_stripe_price_id(content_source_id):
+    query = """
+    SELECT stripe_product_id FROM content_sources
+    WHERE id = %s
+    """
+    return execute_query(query, params=(content_source_id,), fetch=True)[0][0]
