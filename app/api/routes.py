@@ -45,7 +45,7 @@ async def login(request: Request):
             detail="Incorrect email or password"
         )
     return {
-        "access_token": create_access_token(data['email'])
+        "access_token": create_access_token(user[0][0])
     }
 
 
@@ -153,7 +153,7 @@ async def oauth_exchange(request: Request):
         return {"Incorret email or password!"}
 
     return {
-        "access_token": create_access_token(user[0][1]),
+        "access_token": create_access_token(user[0][0]),
         "token_type": "bearer"
     }
 
@@ -222,10 +222,9 @@ async def unsubscribe_content_source(request: Request, payload: dict = Depends(a
 async def gpt_google_login(request: Request):
     data = await request.json()
     try:
-        email = verify_google_user(data.get('id_token'))
-        user = fetch_user(email)
+        user_id = verify_google_user(data.get('id_token'))
 
-        return {"user_id": user[0][0]}
+        return {"user_id": user_id}
 
     except httpx.HTTPError as e:
         raise HTTPException(
@@ -239,10 +238,10 @@ async def gpt_google_login(request: Request):
 async def google_login(request: Request):
     data = await request.json()
     try:
-        email = verify_google_user(data.get('id_token'))
+        user_id = verify_google_user(data.get('id_token'))
 
         return {
-            "access_token": create_access_token(email)
+            "access_token": create_access_token(user_id)
         }
 
     except httpx.HTTPError as e:
@@ -268,4 +267,5 @@ def verify_google_user(google_token: str):
         create_new_user(email, get_hashed_password(
             os.getenv('DEFAULT_PASSWORD')), firstname, lastname)
 
-    return email
+    user = fetch_user(email)
+    return user[0][0]
