@@ -106,7 +106,7 @@ def get_topk_vectors(query, url):
     return texts
 
 
-def get_topk_with_domain(query_embedding, filters, verbose=False):
+def get_topk_with_filters(query_embedding, filters, verbose=False):
     response = index.query(
         vector=query_embedding,
         filter=filters,

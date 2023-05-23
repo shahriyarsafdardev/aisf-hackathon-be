@@ -244,3 +244,12 @@ def check_user_and_content_source_existence(user_id, content_source_id):
     if content_source_exists and user_exists:
         return True
     return False
+
+
+def get_user_content_source_ids(user_id):
+    select_query = "SELECT content_source_id FROM user_content_sources WHERE user_id = %s"
+    results = execute_query(select_query, (user_id,))
+
+    if not results:
+        return None
+    return [result[0] for result in results]

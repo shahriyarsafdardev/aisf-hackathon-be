@@ -15,7 +15,7 @@ import json
 import dotenv
 import yaml
 from app.services.postgres_db import add_user_content_source, get_connector_details, get_content_sources, get_content_sources_for_user, insert_connector, remove_user_content_source
-from app.services.postgres_db import create_new_user, fetch_user, fetch_user_by_id, find_user, get_connector_details, insert_connector
+from app.services.postgres_db import create_new_user, fetch_user, fetch_user_by_id, find_user, get_connector_details, insert_connector, get_user_content_source_ids
 import urllib.parse
 from app.services.scrapping.documentation_parser import query_pinecone
 from app.services.scrapping.scrapper import process_domain
@@ -106,8 +106,20 @@ async def plugin_spec(request: Request):
 
 
 @router.get('/query')
-async def sphere_query(query: str):
-    answer = query_pinecone(query)
+async def sphere_query(request: Request, query: str):
+    data = await request.json()
+    user_id = data['user_id']
+
+    content_source_ids = get_user_content_source_ids(user_id)
+
+    if not content_source_ids:
+        return {"answer" : "No content"}
+
+    filters = {
+        'content_source_id': {'$in': content_source_ids}
+    }
+
+    answer = query_pinecone(query, filters=filters)
     return {"answer": answer}
 
 
