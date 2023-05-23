@@ -19,6 +19,8 @@ import json
 import dotenv
 import yaml
 from app.services.postgres_db import add_user_content_source, get_content_sources, get_content_sources_for_user, get_stripe_price_id, remove_user_content_source, create_new_user, fetch_user, fetch_user_by_id, find_user, get_user_content_source_ids
+from app.services.postgres_db import add_user_content_source, get_connector_details, get_content_sources, get_all_content_sources, get_stripe_price_id, insert_connector, remove_user_content_source
+from app.services.postgres_db import create_new_user, fetch_user, fetch_user_by_id, find_user, get_connector_details, insert_connector
 import urllib.parse
 from app.authentication.authenticate import authenticate
 
@@ -184,15 +186,17 @@ async def content_sources(payload: dict = Depends(authenticate)):
 
 
 @router.get('/user_content_sources')
-async def user_content_sources(user_id: str, payload: dict = Depends(authenticate)):
-    return get_content_sources_for_user(user_id)
+async def user_content_sources(request: Request, token: str = Depends(get_token)):
+    user_id = fetch_user(token)[0][0]
+    return get_all_content_sources(user_id)
 
 
 @router.post('/subscribe_content_source')
-async def subscribe_content_source(request: Request, payload: dict = Depends(authenticate)):
+async def subscribe_content_source(request: Request, token: str = Depends(get_token)):
+    user_id = fetch_user(token)[0][0]
     data = await request.json()
     response = add_user_content_source(
-        data['user_id'], data['content_source_id'])
+        user_id, data['content_source_id'])
     if response:
         return JSONResponse(
             status_code=200,
@@ -207,10 +211,11 @@ async def subscribe_content_source(request: Request, payload: dict = Depends(aut
 
 
 @router.delete('/unsubscribe_content_source')
-async def unsubscribe_content_source(request: Request, payload: dict = Depends(authenticate)):
+async def unsubscribe_content_source(request: Request, token: str = Depends(get_token)):
     data = await request.json()
+    user_id = fetch_user(token)[0][0]
     response = remove_user_content_source(
-        data['user_id'], data['content_source_id'])
+        user_id, data['content_source_id'])
     if response:
         return JSONResponse(
             status_code=200,

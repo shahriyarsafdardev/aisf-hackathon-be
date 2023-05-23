@@ -212,6 +212,22 @@ def get_content_sources_for_user(user_id):
     return execute_query(query, params=(user_id,))
 
 
+def get_content_sources_except_user(user_id):
+    query = """
+    SELECT content_sources.*
+    FROM content_sources
+    LEFT JOIN user_content_sources ON content_sources.id = user_content_sources.content_source_id
+    WHERE user_content_sources.user_id IS NULL OR user_content_sources.user_id != %s
+    """
+    return execute_query(query, params=(user_id,))
+
+
+def get_all_content_sources(user_id):
+    user_content_sources = get_content_sources_for_user(user_id)
+    remaining_content_sources = get_content_sources_except_user(user_id)
+    return {"user_content_sources": user_content_sources, "remaining_content_sources": remaining_content_sources}
+
+
 def add_user_content_source(user_id, content_source_id):
     if check_user_and_content_source_existence(user_id, content_source_id) == False:
         return False
