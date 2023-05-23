@@ -25,6 +25,8 @@ from app.services.s3 import create_bulk_file
 dotenv.load_dotenv()
 router = APIRouter()
 
+# Note that we should gradually transition our routes into distinct files 
+# I have started this work with ai_plugin_routes.py, auth_routes.py and content_source_routes.py
 
 @router.post('/login')
 async def login(request: Request):
