@@ -17,8 +17,6 @@ import yaml
 from app.services.postgres_db import add_user_content_source, get_connector_details, get_content_sources, get_content_sources_for_user, insert_connector, remove_user_content_source
 from app.services.postgres_db import create_new_user, fetch_user, fetch_user_by_id, find_user, get_connector_details, insert_connector
 import urllib.parse
-from app.services.plugin import plugin_handler
-from app.services.hubspot_service import set_hubspot_headers
 from app.services.scrapping.documentation_parser import query_pinecone
 from app.services.scrapping.scrapper import process_domain
 from app.services.s3 import create_bulk_file
@@ -105,125 +103,6 @@ async def plugin_spec(request: Request):
     except Exception as e:
         return f"Error fetching the plugin file: {e}"
     return JSONResponse(content=data)
-
-
-@router.post('/ai-plugins/create')
-async def create_ai_plugin(request: Request, background_tasks: BackgroundTasks):
-    data = await request.json()
-    try:
-        start_url = data['documentation_start_url']
-        base_url = data['documentation_base_url']
-        insert_connector(
-            data['name'], start_url, base_url)
-
-        create_bulk_file(base_url)
-
-        background_tasks.add_task(
-            plugin_handler, data['name'], start_url, base_url)
-
-        return {"status": "success"}
-
-    except UniqueViolation as e:
-        raise HTTPException(
-            status_code=400, detail="A connector with the same name or start url already exists.")
-
-
-@router.get('/ai-plugins/{company_name}')
-async def get_ai_plugin(company_name: str, poll_count: int):
-    res = get_connector_details(company_name)
-    if res[2]:
-        return res[2]
-    else:
-        return None
-
-
-@router.get('/lever/opportunities')
-async def get_opportunities():
-    url = "https://api.lever.co/v1/opportunities"
-    api_key = os.getenv('LEVER_API_KEY')
-    params = {
-        'limit': 20
-    }
-    async with httpx.AsyncClient() as client:
-        response = await client.get(url, auth=(api_key, ""), params=params)
-
-    if response.status_code != 200:
-        raise HTTPException(status_code=response.status_code)
-
-    return response.json()
-
-
-@router.get('/lever/postings')
-async def get_postings():
-    url = "https://api.lever.co/v1/postings"
-    api_key = os.getenv('LEVER_API_KEY')
-    params = {
-        'limit': 25
-    }
-    async with httpx.AsyncClient() as client:
-        response = await client.get(url, auth=(api_key, ""), params=params)
-
-    if response.status_code != 200:
-        raise HTTPException(status_code=response.status_code)
-    data = response.json()['data']
-    for item in data:
-        item['content']['description'] = item['content']['description'][0:100]
-        item['content']['descriptionHtml'] = item['content']['descriptionHtml'][0:100]
-    return data
-
-
-@router.get('/lever/users')
-async def get_users():
-    url = "https://api.lever.co/v1/users"
-    api_key = os.getenv('LEVER_API_KEY')
-    params = {
-        'limit': 50
-    }
-    async with httpx.AsyncClient() as client:
-        response = await client.get(url, auth=(api_key, ""), params=params)
-
-    if response.status_code != 200:
-        raise HTTPException(status_code=response.status_code)
-    return response.json()
-
-
-@router.get('/lever/opportunities/{opportunity_id}/interviews')
-async def get_users():
-    url = "https://api.lever.co/v1/opportunities/{opportunity_id}/interviews"
-    api_key = os.getenv('LEVER_API_KEY')
-    params = {
-        'limit': 50
-    }
-    async with httpx.AsyncClient() as client:
-        response = await client.get(url, auth=(api_key, ""), params=params)
-
-
-@router.get('/hubspot/contacts')
-async def get_hubspot_contacts():
-    url = "https://api.hubapi.com/crm/v3/objects/contacts"
-    headers = set_hubspot_headers()
-
-    async with httpx.AsyncClient() as client:
-        response = await client.get(url, headers=headers)
-
-    if response.status_code != 200:
-        raise HTTPException(status_code=response.status_code)
-
-    return response.json()
-
-
-@router.get('/hubspot/companies')
-async def get_hubspot_companies():
-    url = "https://api.hubapi.com/crm/v3/objects/companies"
-    headers = set_hubspot_headers()
-
-    async with httpx.AsyncClient() as client:
-        response = await client.get(url, headers=headers)
-
-    if response.status_code != 200:
-        raise HTTPException(status_code=response.status_code)
-
-    return response.json()
 
 
 @router.get('/query')
