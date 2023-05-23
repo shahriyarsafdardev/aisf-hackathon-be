@@ -1,23 +1,22 @@
 from uuid import uuid4
 from app.services.openai import create_embedding
 from app.services.pinecone_db import get_topk_with_filters
+from app.services.stripe import get_stripe_product, get_subscription_intent, cancel_subscription, get_stripe_product, get_subscription_intent
 from app.utils import (
+    decode_access_token,
     get_hashed_password,
     create_access_token,
     verify_password
 )
-from fastapi.security import OAuth2PasswordRequestForm
-from fastapi.responses import RedirectResponse
-from fastapi import APIRouter, BackgroundTasks, Request, HTTPException, Response, status, Depends
-from fastapi.responses import JSONResponse
-from psycopg2.errors import UniqueViolation
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi.responses import RedirectResponse, JSONResponse
+from fastapi import APIRouter, Request, HTTPException, status, Depends
 import os
 import httpx
 import json
 import dotenv
 import yaml
-from app.services.postgres_db import add_user_content_source, get_connector_details, get_content_sources, get_content_sources_for_user, insert_connector, remove_user_content_source
-from app.services.postgres_db import create_new_user, fetch_user, fetch_user_by_id, find_user, get_connector_details, insert_connector, get_user_content_source_ids
+from app.services.postgres_db import add_user_content_source, get_content_sources, get_all_content_sources, get_stripe_price_id, get_subscription_id, remove_user_content_source, remove_user_content_source, create_new_user, fetch_user, fetch_user_by_id, find_user, get_user_content_source_ids
 import urllib.parse
 from app.authentication.authenticate import authenticate
 
@@ -27,6 +26,11 @@ router = APIRouter()
 
 # Note that we should gradually transition our routes into distinct files
 # I have started this work with ai_plugin_routes.py, auth_routes.py and content_source_routes.py
+
+
+def get_token(credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer())) -> str:
+    token = credentials.credentials
+    return decode_access_token(token)
 
 
 @router.post('/login')
@@ -178,15 +182,17 @@ async def content_sources(payload: dict = Depends(authenticate)):
 
 
 @router.get('/user_content_sources')
-async def user_content_sources(user_id: str, payload: dict = Depends(authenticate)):
-    return get_content_sources_for_user(user_id)
+async def user_content_sources(request: Request, token: str = Depends(get_token)):
+    user_id = fetch_user(token)[0][0]
+    return get_all_content_sources(user_id)
 
 
 @router.post('/subscribe_content_source')
-async def subscribe_content_source(request: Request, payload: dict = Depends(authenticate)):
+async def subscribe_content_source(request: Request, token: str = Depends(get_token)):
+    user_id = fetch_user(token)[0][0]
     data = await request.json()
     response = add_user_content_source(
-        data['user_id'], data['content_source_id'])
+        user_id, data['content_source_id'], data['stripe_customer_id'], data['stripe_payment_method_id'], data['subscription_id'])
     if response:
         return JSONResponse(
             status_code=200,
@@ -201,16 +207,22 @@ async def subscribe_content_source(request: Request, payload: dict = Depends(aut
 
 
 @router.delete('/unsubscribe_content_source')
-async def unsubscribe_content_source(request: Request, payload: dict = Depends(authenticate)):
+async def unsubscribe_content_source(request: Request, token: str = Depends(get_token)):
     data = await request.json()
-    response = remove_user_content_source(
-        data['user_id'], data['content_source_id'])
-    if response:
-        return JSONResponse(
-            status_code=200,
-            content={'status': "success",
-                     "message": "Unsubscribed from content successfully!"}
+    user_id = fetch_user(token)[0][0]
+    subscription_id = get_subscription_id(user_id, data['content_source_id'])
+    is_canceled = cancel_subscription(subscription_id)
+    if is_canceled is None:
+        raise HTTPException(
+            status_code=400,
+            detail={"status": "failure", "error": "Something went wrong!"}
         )
+
+    response = remove_user_content_source(
+        user_id, data['content_source_id'])
+
+    if response:
+        return get_all_content_sources(user_id)
     else:
         raise HTTPException(
             status_code=400,
@@ -269,3 +281,16 @@ def verify_google_user(google_token: str):
 
     user = fetch_user(email)
     return user[0][0]
+
+
+@router.get('/stripe_product_details')
+async def stripe_product_for_content_source(content_source_id: str):
+    stripe_price_id = get_stripe_price_id(content_source_id)
+    product = get_stripe_product(stripe_price_id)
+    return {'product': product}
+
+
+@router.get('/subscription_intent')
+async def subscription_intent(price_id: str, token: str = Depends(get_token)):
+    subscription_intent = get_subscription_intent(price_id, token)
+    return subscription_intent

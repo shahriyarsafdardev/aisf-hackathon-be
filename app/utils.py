@@ -2,7 +2,7 @@ from passlib.context import CryptContext
 import os
 from datetime import datetime, timedelta
 from typing import Union, Any
-from jose import jwt
+from jose import JWTError, jwt
 
 ACCESS_TOKEN_EXPIRE_DAYS = 36500
 ALGORITH = "HS256"
@@ -27,3 +27,12 @@ def create_access_token(subject: Union[str, Any], expires_delta: int = None) -> 
     to_encode = {"exp": expires_delta, "sub": str(subject)}
     encoded_jwt = jwt.encode(to_encode, os.getenv('JWT_SECRET_KEY'), ALGORITH)
     return encoded_jwt
+
+
+def decode_access_token(token):
+    try:
+        decoded_token = jwt.decode(token, os.getenv(
+            'JWT_SECRET_KEY'), algorithms=['HS256'])
+        return decoded_token['sub']
+    except JWTError as e:
+        return {"message": f"JWTError: {str(e)}"}

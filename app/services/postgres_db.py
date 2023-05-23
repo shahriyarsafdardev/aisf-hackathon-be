@@ -212,18 +212,35 @@ def get_content_sources_for_user(user_id):
     return execute_query(query, params=(user_id,))
 
 
-def add_user_content_source(user_id, content_source_id):
+def get_content_sources_except_user(user_id):
+    query = """
+    SELECT content_sources.*
+    FROM content_sources
+    LEFT JOIN user_content_sources ON content_sources.id = user_content_sources.content_source_id
+    WHERE user_content_sources.user_id IS NULL OR user_content_sources.user_id != %s
+    """
+    return execute_query(query, params=(user_id,))
+
+
+def get_all_content_sources(user_id):
+    user_content_sources = get_content_sources_for_user(user_id)
+    remaining_content_sources = get_content_sources_except_user(user_id)
+    return {"user_content_sources": user_content_sources, "remaining_content_sources": remaining_content_sources}
+
+
+def add_user_content_source(user_id, content_source_id, customer_id, payment_method_id, subscription_id):
     if check_user_and_content_source_existence(user_id, content_source_id) == False:
         return False
     query = """
-    INSERT INTO user_content_sources (user_id, content_source_id)
-    SELECT %s, %s
+    INSERT INTO user_content_sources (user_id, content_source_id, customer_id, payment_method_id, subscription_id)
+    SELECT %s, %s, %s, %s, %s
     WHERE NOT EXISTS (
         SELECT 1 FROM user_content_sources 
         WHERE user_id = %s AND content_source_id = %s
     )
     """
-    params = (user_id, content_source_id, user_id, content_source_id)
+    params = (user_id, content_source_id, customer_id,
+              payment_method_id, subscription_id, user_id, content_source_id)
     return execute_query(query, params=params, fetch=False)
 
 
@@ -253,3 +270,25 @@ def get_user_content_source_ids(user_id):
     if not results:
         return None
     return [result[0] for result in results]
+
+
+def get_stripe_price_id(content_source_id):
+    query = """
+    SELECT stripe_price_id FROM content_sources
+    WHERE id = %s
+    """
+    return execute_query(query, params=(content_source_id,), fetch=True)[0][0]
+
+
+def get_subscription_id(user_id, content_source_id):
+    query = """
+    SELECT subscription_id FROM user_content_sources 
+    WHERE user_id = %s AND content_source_id = %s
+    """
+    params = (user_id, content_source_id)
+    result = execute_query(query, params=params, fetch=True)
+
+    if result and len(result) > 0:
+        return result[0][0]
+
+    return None
