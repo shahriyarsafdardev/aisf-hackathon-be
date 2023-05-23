@@ -13,11 +13,6 @@ def create_embedding(text):
     return openai.Embedding.create(input=[text], model="text-embedding-ada-002")['data'][0]['embedding']
 
 
-def create_embedding(text):
-    query = text.replace("\n", ". ")
-    return openai.Embedding.create(input=[query], model="text-embedding-ada-002")['data'][0]['embedding']
-
-
 logger = getLogger()
 
 
