@@ -1,8 +1,7 @@
 from uuid import uuid4
 from app.services.openai import create_embedding
 from app.services.pinecone_db import get_topk_with_filters
-from app.services.stripe import get_stripe_product, get_subscription_intent
-from app.services.stripe import cancel_subscription, get_stripe_product, get_subscription_intent
+from app.services.stripe import get_stripe_product, get_subscription_intent, cancel_subscription, get_stripe_product, get_subscription_intent
 from app.utils import (
     decode_access_token,
     get_hashed_password,
@@ -10,24 +9,16 @@ from app.utils import (
     verify_password
 )
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from fastapi.responses import RedirectResponse
-from fastapi import APIRouter, BackgroundTasks, Request, HTTPException, Response, status, Depends
-from fastapi.responses import JSONResponse
-from psycopg2.errors import UniqueViolation
+from fastapi.responses import RedirectResponse, JSONResponse
+from fastapi import APIRouter, Request, HTTPException, status, Depends
 import os
 import httpx
 import json
 import dotenv
 import yaml
-from app.services.postgres_db import add_user_content_source, get_content_sources, get_content_sources_for_user, get_stripe_price_id, remove_user_content_source, create_new_user, fetch_user, fetch_user_by_id, find_user, get_user_content_source_ids
-from app.services.postgres_db import add_user_content_source, get_connector_details, get_content_sources, get_all_content_sources, get_stripe_price_id, insert_connector, remove_user_content_source, remove_user_content_source
-from app.services.postgres_db import create_new_user, fetch_user, fetch_user_by_id, find_user, get_connector_details, insert_connector
+from app.services.postgres_db import add_user_content_source, get_content_sources, get_all_content_sources, get_stripe_price_id, get_subscription_id, remove_user_content_source, remove_user_content_source, create_new_user, fetch_user, fetch_user_by_id, find_user, get_user_content_source_ids
 import urllib.parse
 from app.authentication.authenticate import authenticate
-from app.services.plugin import plugin_handler
-from app.services.hubspot_service import set_hubspot_headers
-from app.services.scrapping.documentation_parser import query_pinecone
-from app.services.s3 import create_bulk_file
 
 
 dotenv.load_dotenv()
