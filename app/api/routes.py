@@ -7,12 +7,10 @@ from app.services.openai import create_embedding
 from app.services.pinecone_db import get_topk_with_filters
 from app.services.stripe import create_session_for_checkout, get_stripe_product, get_subscription, get_subscription_intent, cancel_subscription, get_stripe_product, get_subscription_intent
 from app.utils import (
-    decode_access_token,
     get_hashed_password,
     create_access_token,
     verify_password
 )
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from fastapi.responses import RedirectResponse, JSONResponse
 from fastapi import APIRouter, Request, HTTPException, status, Depends
 import os
@@ -31,11 +29,6 @@ router = APIRouter()
 router.include_router(content_source_router)
 router.include_router(auth_router)
 router.include_router(ai_plugin_router)
-
-def get_token(credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer())) -> str:
-    token = credentials.credentials
-    return decode_access_token(token)
-
 
 @router.post('/login')
 async def login(request: Request):
@@ -186,13 +179,13 @@ async def content_sources(payload: dict = Depends(authenticate)):
 
 
 @router.get('/user_content_sources')
-async def user_content_sources(request: Request, token: str = Depends(get_token)):
-    return get_all_content_sources(token)
+async def user_content_sources(request: Request, payload: str = Depends(authenticate)):
+    return get_all_content_sources(payload)
 
 
 @router.post('/subscribe_content_source')
-async def subscribe_content_source(request: Request, decoded_token: str = Depends(get_token)):
-    user_id = decoded_token
+async def subscribe_content_source(request: Request, payload: str = Depends(authenticate)):
+    user_id = payload
     data = await request.json()
     response = add_user_content_source(
         user_id, data['content_source_id'], data['stripe_customer_id'], data['subscription_id'])
@@ -210,9 +203,9 @@ async def subscribe_content_source(request: Request, decoded_token: str = Depend
 
 
 @router.delete('/unsubscribe_content_source')
-async def unsubscribe_content_source(request: Request, decoded_token: str = Depends(get_token)):
+async def unsubscribe_content_source(request: Request, payload: str = Depends(authenticate)):
     data = await request.json()
-    user_id = decoded_token
+    user_id = payload
     subscription_id = get_subscription_id(user_id, data['content_source_id'])
     is_canceled = cancel_subscription(subscription_id)
     if is_canceled is None:
@@ -294,16 +287,16 @@ async def stripe_product_for_content_source(content_source_id: str):
 
 
 @router.get('/subscription_intent')
-async def subscription_intent(price_id: str, decoded_token: str = Depends(get_token)):
-    user_id = decoded_token
+async def subscription_intent(price_id: str, payload: str = Depends(authenticate)):
+    user_id = payload
     subscription_intent = get_subscription_intent(price_id, user_id)
     return subscription_intent
 
 
 @router.post("/create_checkout_session")
-async def create_checkout_session(request: Request, decoded_token: str = Depends(get_token)):
+async def create_checkout_session(request: Request, payload: str = Depends(authenticate)):
     data = await request.json()
-    user_id = decoded_token
+    user_id = payload
     base_url = os.getenv('FRONTEND_URL')
     try:
         checkout_session = create_session_for_checkout(

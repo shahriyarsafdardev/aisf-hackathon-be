@@ -27,12 +27,3 @@ def create_access_token(subject: Union[str, Any], expires_delta: int = None) -> 
     to_encode = {"exp": expires_delta, "sub": str(subject)}
     encoded_jwt = jwt.encode(to_encode, os.getenv('JWT_SECRET_KEY'), ALGORITH)
     return encoded_jwt
-
-
-def decode_access_token(token):
-    try:
-        decoded_token = jwt.decode(token, os.getenv(
-            'JWT_SECRET_KEY'), algorithms=['HS256'])
-        return decoded_token['sub']
-    except JWTError as e:
-        return {"message": f"JWTError: {str(e)}"}
