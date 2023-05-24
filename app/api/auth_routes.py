@@ -31,6 +31,7 @@ async def login(request: Request):
             detail="Incorrect email or password"
         )
     return {
+        "user_id": user[0][0],
         "access_token": create_access_token(user[0][0])
     }
 
@@ -80,36 +81,6 @@ async def oauth_exchange(request: Request):
     }
 
 
-@router.post('/verify_user')
-async def login(request: Request):
-    data = await request.json()
-    user = fetch_user(data['email'])
-    if len(user) == 0:
-        return {"user_id": None}
-
-    hashed_pass = user[0][2]
-    if not verify_password(data['password'], hashed_pass):
-        return {"user_id": None}
-
-    return {"user_id": user[0][0]}
-
-
-@router.post('/gpt_google_login')
-async def gpt_google_login(request: Request):
-    data = await request.json()
-    try:
-        user_id = verify_google_user(data.get('id_token'))
-
-        return {"user_id": user_id}
-
-    except httpx.HTTPError as e:
-        raise HTTPException(
-            status_code=400, detail='Invalid Google sign-in token')
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail='Internal server error')
-
-
 @router.post('/google_login')
 async def google_login(request: Request):
     data = await request.json()
@@ -117,6 +88,7 @@ async def google_login(request: Request):
         user_id = verify_google_user(data.get('id_token'))
 
         return {
+            "user_id": user_id,
             "access_token": create_access_token(user_id)
         }
 
