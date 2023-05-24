@@ -228,19 +228,19 @@ def get_all_content_sources(user_id):
     return {"user_content_sources": user_content_sources, "remaining_content_sources": remaining_content_sources}
 
 
-def add_user_content_source(user_id, content_source_id, customer_id, payment_method_id, subscription_id):
+def add_user_content_source(user_id, content_source_id, customer_id, subscription_id):
     if check_user_and_content_source_existence(user_id, content_source_id) == False:
         return False
     query = """
-    INSERT INTO user_content_sources (user_id, content_source_id, customer_id, payment_method_id, subscription_id)
-    SELECT %s, %s, %s, %s, %s
+    INSERT INTO user_content_sources (user_id, content_source_id, customer_id, subscription_id)
+    SELECT %s, %s, %s, %s
     WHERE NOT EXISTS (
         SELECT 1 FROM user_content_sources 
         WHERE user_id = %s AND content_source_id = %s
     )
     """
     params = (user_id, content_source_id, customer_id,
-              payment_method_id, subscription_id, user_id, content_source_id)
+              subscription_id, user_id, content_source_id)
     return execute_query(query, params=params, fetch=False)
 
 
