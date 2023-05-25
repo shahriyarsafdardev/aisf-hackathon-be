@@ -42,11 +42,15 @@ async def create_user(request: Request):
     users_count = find_user(data['email'])
     if users_count == 0:
         create_new_user(data['email'], get_hashed_password(
-            data['password']), data['firstname'], data['lastname'])
+            data['password']), '', '')
     else:
         return {"message": "User already exists"}
 
-    return {"message": "Success"}
+    user = fetch_user(data['email'])
+    return {
+        "user_id": user[0][0],
+        "access_token": create_access_token(user[0][0])
+    }
 
 
 @router.get("/oauth/authorize")
