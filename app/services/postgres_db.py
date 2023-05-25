@@ -213,13 +213,20 @@ def get_content_sources_for_user(user_id):
 
 
 def get_content_sources_except_ids(exclude_ids):
-    placeholders = ', '.join(['%s'] * len(exclude_ids))
-    query = f"""
-    SELECT content_sources.*
-    FROM content_sources
-    WHERE content_sources.id NOT IN ({placeholders})
-    """
-    return execute_query(query, params=exclude_ids)
+    if not exclude_ids:
+        query = """
+        SELECT content_sources.*
+        FROM content_sources
+        """
+        return execute_query(query)
+    else:
+        placeholders = ', '.join(['%s'] * len(exclude_ids))
+        query = f"""
+        SELECT content_sources.*
+        FROM content_sources
+        WHERE content_sources.id NOT IN ({placeholders})
+        """
+        return execute_query(query, params=exclude_ids)
 
 
 def add_user_content_source(user_id, content_source_id, customer_id, subscription_id):
