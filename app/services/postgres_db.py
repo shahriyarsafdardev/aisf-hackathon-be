@@ -3,6 +3,7 @@ import psycopg2
 from dotenv import load_dotenv
 from datetime import datetime, timedelta, timezone
 from app.core.logging import getLogger
+from app.services.content_sources import rearrange_content_sources
 
 load_dotenv()
 
@@ -225,6 +226,8 @@ def get_content_sources_except_user(user_id):
 def get_all_content_sources(user_id):
     user_content_sources = get_content_sources_for_user(user_id)
     remaining_content_sources = get_content_sources_except_user(user_id)
+    user_content_sources= rearrange_content_sources(user_content_sources)
+    remaining_content_sources = rearrange_content_sources(remaining_content_sources)
     return {"user_content_sources": user_content_sources, "remaining_content_sources": remaining_content_sources}
 
 
@@ -292,3 +295,5 @@ def get_subscription_id(user_id, content_source_id):
         return result[0][0]
 
     return None
+
+
