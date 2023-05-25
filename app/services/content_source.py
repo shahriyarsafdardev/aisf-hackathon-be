@@ -13,6 +13,9 @@ def get_all_content_sources(user_id):
 
 
 def rearrange_content_sources(content_sources):
+    if content_sources is None:
+        return []
+
     def sorting_key(content_source):
         id, name, price, price_id = content_source
         return price_id == '' or price == 0.0
