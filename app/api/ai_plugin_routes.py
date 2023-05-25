@@ -4,6 +4,7 @@ from app.services.openai import create_embedding
 from app.services.pinecone_db import get_topk_with_filters
 from app.services.postgres_db import get_user_content_source_ids
 from app.authentication.authenticate import authenticate
+from app.services.segment_analytics import track_query_logs
 import json
 import yaml
 import os
@@ -56,7 +57,8 @@ async def sphere_query(query: str, payload: dict = Depends(authenticate)):
 
     embedded_query = create_embedding(query)
     answer, relevance_scores = get_topk_with_filters(embedded_query, filters)
-
+    segment_params = {"query": query, "response": relevance_scores}
+    track_query_logs(user_id, "Testing", segment_params)
     return {"answer": answer}
 
 

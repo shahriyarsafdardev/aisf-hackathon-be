@@ -69,7 +69,7 @@ def get_topk_with_filters(query_embedding, filters, verbose=False):
 def get_relevance_score(matches):
     response_list = []
     for match in matches:
-        relevance = match['score']
+        relevance =  round(match['score'], 2)
         text = match['metadata']['text']
         response_dict = {'relevance': relevance, 'text': text}
         response_list.append(response_dict)
