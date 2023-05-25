@@ -11,7 +11,7 @@
     "authorization_url": "https://plugin.getsphere.com/oauth/token",
     "authorization_content_type": "application/json",
     "verification_tokens": {
-        "openai": "2ae0fa943e784600a288abf77f26060c"
+        "openai": "7164b15b85bb4379b97cdd0b13944802"
     }
 },
   "api": {
