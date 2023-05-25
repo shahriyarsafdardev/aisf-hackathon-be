@@ -10,9 +10,14 @@ from app.utils import (
 )
 from app.services.postgres_db import create_new_user, fetch_user, fetch_user_by_id, find_user
 from fastapi.responses import RedirectResponse
+from json import JSONDecodeError
 
 dotenv.load_dotenv()
 router = APIRouter()
+
+import logging
+
+logger = logging.getLogger('uvicorn')
 
 
 @router.post('/login')
@@ -74,10 +79,24 @@ async def oauth(request: Request):
 
 @router.post("/oauth/token")
 async def oauth_exchange(request: Request):
-    data = await request.json()
-    user = fetch_user_by_id(data['code'])
-    if len(user) is None:
-        return {"Incorret email or password!"}
+    body = await request.body()
+    logger.info("\n\n\nBody:")
+    logger.info(body.decode())
+    logger.info("\n\n\n")
+    
+    try:
+        data = await request.json()
+        code = data.get('code')
+    except JSONDecodeError:
+        form_data = await request.form()
+        code = form_data.get('code')
+
+    if not code:
+        raise HTTPException(status_code=400, detail="Code not provided!")
+    
+    user = fetch_user_by_id(code)
+    if not user:
+        raise HTTPException(status_code=400, detail="Incorrect email or password!")
 
     return {
         "access_token": create_access_token(user[0][0]),
