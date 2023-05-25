@@ -61,9 +61,9 @@ async def oauth(request: Request):
     print("OAuth key value pairs from the ChatGPT Request: ", kvps)
     url = kvps["redirect_uri"]
     print("URL: ", url)
-    login_url = f"{os.getenv('FRONTEND_URL')}/login"
+    base_url = f"{os.getenv('FRONTEND_URL')}"
     encoded_url = urllib.parse.quote_plus(url)
-    redirect_url = f"{login_url}?url={encoded_url}"
+    redirect_url = f"{base_url}?url={encoded_url}"
 
     return RedirectResponse(url=redirect_url)
 

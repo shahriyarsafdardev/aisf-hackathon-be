@@ -6,9 +6,9 @@
   "description_for_model": "A plugin that allows the user to query anything to Sphere.",
   "auth": {
     "type": "oauth",
-    "client_url": "https://sphere-aisf-hackathon-be.herokuapp.com/oauth/authorize",
+    "client_url": "https://plugin.getsphere.com/oauth/authorize",
     "scope": "",
-    "authorization_url": "https://sphere-aisf-hackathon-be.herokuapp.com/oauth/token",
+    "authorization_url": "https://plugin.getsphere.com/oauth/token",
     "authorization_content_type": "application/json",
     "verification_tokens": {
         "openai": "2ae0fa943e784600a288abf77f26060c"
@@ -16,7 +16,7 @@
 },
   "api": {
     "type": "openapi",
-    "url": "https://sphere-aisf-hackathon-be.herokuapp.com/openapi.yaml",
+    "url": "https://plugin.getsphere.com/openapi.yaml",
     "is_user_authenticated": false
   },
   "logo_url": "https://sphere-public.s3.eu-west-2.amazonaws.com/sphere-logo-icon.svg",
