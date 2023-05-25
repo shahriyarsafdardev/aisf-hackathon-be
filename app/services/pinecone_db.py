@@ -22,6 +22,7 @@ openai.api_key = openai_api_key
 
 logger = getLogger()
 
+
 def store_vectors(texts):
     try:
         vectors = []
@@ -50,6 +51,7 @@ def store_vectors(texts):
         logger.error(
             f"Something went wrong while storing vectors to pinecone: {e}")
 
+
 def get_topk_with_filters(query_embedding, filters, verbose=False):
     response = index.query(
         vector=query_embedding,
@@ -59,8 +61,19 @@ def get_topk_with_filters(query_embedding, filters, verbose=False):
     )
 
     texts = [match['metadata']['text'] for match in response['matches']]
+    relevance_scores = get_relevance_score(response['matches'])
 
-    return texts
+    return [texts, relevance_scores]
+
+
+def get_relevance_score(matches):
+    response_list = []
+    for match in matches:
+        relevance = match['score']
+        text = match['metadata']['text']
+        response_dict = {'relevance': relevance, 'text': text}
+        response_list.append(response_dict)
+    return response_list
 
 
 def delete_vectors(filters):

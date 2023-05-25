@@ -55,7 +55,7 @@ async def sphere_query(query: str, payload: dict = Depends(authenticate)):
     }
 
     embedded_query = create_embedding(query)
-    answer = get_topk_with_filters(embedded_query, filters)
+    answer, relevance_scores = get_topk_with_filters(embedded_query, filters)
 
     return {"answer": answer}
 
