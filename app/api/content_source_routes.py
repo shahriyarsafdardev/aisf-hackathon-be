@@ -1,15 +1,13 @@
 from fastapi import APIRouter, Request, Depends
-from app.services.postgres_db import add_user_content_source, get_content_sources, get_all_content_sources, get_stripe_price_id, get_subscription_id, remove_user_content_source
+from app.services.content_source import get_all_content_sources
 from app.services.stripe import cancel_subscription, get_stripe_product, get_subscription_intent
-from fastapi.responses import JSONResponse
 from fastapi import HTTPException
 from app.authentication.authenticate import authenticate
 import stripe
 from app.services.stripe import create_session_for_checkout, get_stripe_product, get_subscription, get_subscription_intent, cancel_subscription, get_stripe_product, get_subscription_intent
-from fastapi.responses import JSONResponse
 from fastapi import APIRouter, Request, HTTPException, Depends
 import os
-from app.services.postgres_db import add_user_content_source, get_content_sources, get_all_content_sources, get_stripe_price_id, get_subscription_id, remove_user_content_source, remove_user_content_source
+from app.services.postgres_db import add_user_content_source, get_content_sources, get_stripe_price_id, get_subscription_id, remove_user_content_source, remove_user_content_source
 from app.authentication.authenticate import authenticate
 
 router = APIRouter()
@@ -30,13 +28,9 @@ async def subscribe_content_source(request: Request, payload: str = Depends(auth
     user_id = payload
     data = await request.json()
     response = add_user_content_source(
-        user_id, data['content_source_id'], data['stripe_customer_id'], data['subscription_id'])
+        user_id, data['content_source_id'], '', '')
     if response:
-        return JSONResponse(
-            status_code=200,
-            content={'status': "success",
-                     "message": "Subscribed to content successfully!"}
-        )
+        return get_all_content_sources(payload)
     else:
         raise HTTPException(
             status_code=400,
@@ -49,12 +43,13 @@ async def unsubscribe_content_source(request: Request, payload: str = Depends(au
     data = await request.json()
     user_id = payload
     subscription_id = get_subscription_id(user_id, data['content_source_id'])
-    is_canceled = cancel_subscription(subscription_id)
-    if is_canceled is None:
-        raise HTTPException(
-            status_code=400,
-            detail={"status": "failure", "error": "Something went wrong!"}
-        )
+    if subscription_id:
+        is_canceled = cancel_subscription(subscription_id)
+        if is_canceled is None:
+            raise HTTPException(
+                status_code=400,
+                detail={"status": "failure", "error": "Something went wrong!"}
+            )
 
     response = remove_user_content_source(
         user_id, data['content_source_id'])
