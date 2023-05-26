@@ -57,14 +57,16 @@ async def sphere_query(query: str, payload: dict = Depends(authenticate)):
 
     embedded_query = create_embedding(query)
     answer, relevance_scores = get_topk_with_filters(embedded_query, filters)
-    event_params = {"query": query, "response": relevance_scores}
     user_response = fetch_user_by_id(user_id)
 
     if user_response is None:
         return {"answer": answer}
 
     try:
-        identify_user(user_response[0])
+        user = user_response[0]
+        event_params = {
+            "email": user[1], "query": query, "response": relevance_scores}
+        identify_user(user)
         track_event(user_id, 'GPT Query', event_params)
     except Exception as e:
         print("An exception occurred:", e)
