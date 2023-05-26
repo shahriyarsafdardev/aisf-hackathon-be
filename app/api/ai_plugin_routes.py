@@ -18,42 +18,27 @@ def get_base_url(request: Request):
 @router.get('/.well-known/ai-plugin.json')
 async def plugin_manifest(request: Request):
     try:
-        base_url = {"base_url": f"{request.url.scheme}://{request.url.netloc}"}
-        json_file_path = 'app/templates/sphere_auth/ai-plugin.json'
-        # base_url = get_base_url(request)
-        # if base_url['port'] == '8000':
-        #     json_file_path = 'app/templates/lever/ai-plugin.json'
-        # if base_url['port'] == '8001':
-        #     json_file_path = 'app/templates/hubspot/ai-plugin.json'
-        # if base_url['port'] == '8002':
-        #     json_file_path = 'app/templates/sphere/ai-plugin.json'
-        with open(json_file_path, 'r') as json_file:
-            data = json.load(json_file)
-        data['api']['url'] = f"{base_url['base_url']}/openapi.yaml"
+        base_url = f"{request.url.scheme}://{request.url.netloc}"
+        with open('.well-known/ai-plugin.json', 'r') as json_file:
+            ai_plugin_json = json.load(json_file)
+        ai_plugin_json['api']['url'] = f"{base_url}/openapi.yaml"
+        ai_plugin_json['auth']['client_url'] = f"{base_url}/oauth/authorize"
+        ai_plugin_json['auth']['authorization_url'] = f"{base_url}/oauth/token"
     except Exception as e:
         return f"Error fetching the plugin file: {e}"
-
-    return JSONResponse(content=data)
+    return JSONResponse(content=ai_plugin_json)
 
 
 @router.get('/openapi.yaml')
 async def plugin_spec(request: Request):
     try:
-        base_url = {"base_url": f"{request.url.scheme}://{request.url.netloc}"}
-        yaml_file_path = 'app/templates/sphere_auth/openapi.yaml'
-        # base_url = get_base_url(request)
-        # if base_url['port'] == '8000':
-        #     yaml_file_path = 'app/templates/lever/openapi.yaml'
-        # if base_url['port'] == '8001':
-        #     yaml_file_path = 'app/templates/hubspot/openapi.yaml'
-        # if base_url['port'] == '8002':
-        #     yaml_file_path = 'app/templates/sphere/openapi.yaml'
-        with open(yaml_file_path, 'r') as yaml_file:
-            data = yaml.safe_load(yaml_file)
-        data['servers'][0]['url'] = base_url['base_url']
+        base_url = f"{request.url.scheme}://{request.url.netloc}"
+        with open('.well-known/openapi.yaml', 'r') as yaml_file:
+            open_api_json = yaml.safe_load(yaml_file)
+        open_api_json['servers'][0]['url'] = base_url
     except Exception as e:
         return f"Error fetching the plugin file: {e}"
-    return JSONResponse(content=data)
+    return JSONResponse(content=open_api_json)
 
 
 @router.get('/query')

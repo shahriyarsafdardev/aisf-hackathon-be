@@ -1,0 +1,36 @@
+openapi: 3.0.1
+info:
+  title: Sphere
+  description: Plugin for answering questions using Sphere's resources? Use it whenever a user asks something to Shhere and include the whole user prompt to the /query endpoint.
+  version: "v1"
+servers:
+  - url: https://9fd15ecddce4.ngrok.app
+paths:
+  /query:
+    get:
+      operationId: getQuery
+      summary: Accepts user question/query and returns relevant resources.
+      description: Accepts user question/query and returns relevant resources.
+      parameters:
+        - in: query
+          name: query
+          schema:
+            type: string
+          required: true
+          description: The full user prompt was inputed
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/getQueryResponse"
+
+components:
+  schemas:
+    getQueryResponse:
+      type: object
+      properties:
+        answer:
+          type: string
+          description: The answer of the query.
