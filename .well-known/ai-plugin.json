@@ -2,8 +2,8 @@
   "schema_version": "v1",
   "name_for_human": "Sphere",
   "name_for_model": "Sphere",
-  "description_for_human": "Plugin for answering questions using Sphere's resources?",
-  "description_for_model": "Plugin for answering questions using Sphere's resources? Use it whenever a user asks something to Shhere and include the whole user prompt to the /query endpoint.",
+  "description_for_human": "Access high quality resources like publications, technical documentation and media, all without having to leave chat.",
+  "description_for_model": "Plugin for answering questions using Sphere's high quality resources like publications, technical documentation and media. Use it whenever a user says \"Ask Sphere\" or asks to access / edit their Sphere settings or content sources",
   "auth": {
     "type": "oauth",
     "client_url": "base_url/oauth/authorize",

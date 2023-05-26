@@ -1,10 +1,10 @@
 openapi: 3.0.1
 info:
   title: Sphere
-  description: Plugin for answering questions using Sphere's resources? Use it whenever a user asks something to Shhere and include the whole user prompt to the /query endpoint.
+  description: Plugin for answering questions using Sphere's high quality resources like publications, technical documentation and media. Use it whenever a user says "Ask Sphere" or asks to access / edit their Sphere settings or content sources
   version: "v1"
 servers:
-  - url: https://9fd15ecddce4.ngrok.app
+  - url: base_url
 paths:
   /query:
     get:
@@ -25,6 +25,18 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/getQueryResponse"
+  /content-source-settings:
+    get:
+      operationId: contentSourceSettings
+      summary: Returns the users content source settings.
+      description: Returns the users content source settings.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/getSettingsResponse"
 
 components:
   schemas:
@@ -34,3 +46,6 @@ components:
         answer:
           type: string
           description: The answer of the query.
+    getSettingsResponse:
+      type: string
+      description: The url for the users content source settings.

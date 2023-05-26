@@ -6,6 +6,7 @@ from app.services.postgres_db import get_user_content_source_ids
 from app.authentication.authenticate import authenticate
 import json
 import yaml
+import os
 
 router = APIRouter()
 
@@ -57,3 +58,8 @@ async def sphere_query(query: str, payload: dict = Depends(authenticate)):
     answer = get_topk_with_filters(embedded_query, filters)
 
     return {"answer": answer}
+
+
+@router.get('/content-source-settings')
+async def sphere_query():
+    return f"To access your Sphere settings please open: [{os.getenv('FRONTEND_URL')}]({os.getenv('FRONTEND_URL')})"
