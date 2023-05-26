@@ -2,8 +2,9 @@ from fastapi import APIRouter, Request, Depends
 from fastapi.responses import JSONResponse
 from app.services.openai import create_embedding
 from app.services.pinecone_db import get_topk_with_filters
-from app.services.postgres_db import get_user_content_source_ids
+from app.services.postgres_db import fetch_user_by_id, get_user_content_source_ids
 from app.authentication.authenticate import authenticate
+from app.services.segment import identify_user, track_event
 import json
 import yaml
 import os
@@ -55,7 +56,20 @@ async def sphere_query(query: str, payload: dict = Depends(authenticate)):
     }
 
     embedded_query = create_embedding(query)
-    answer = get_topk_with_filters(embedded_query, filters)
+    answer, relevance_scores = get_topk_with_filters(embedded_query, filters)
+    user_response = fetch_user_by_id(user_id)
+
+    if user_response is None:
+        return {"answer": answer}
+
+    try:
+        user = user_response[0]
+        event_params = {
+            "email": user[1], "query": query, "response": relevance_scores}
+        identify_user(user)
+        track_event(user_id, 'GPT Query', event_params)
+    except Exception as e:
+        print("An exception occurred:", e)
 
     return {"answer": answer}
 
