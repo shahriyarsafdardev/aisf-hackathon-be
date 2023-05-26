@@ -1,3 +1,4 @@
+import logging
 import os
 import urllib.parse
 import dotenv
@@ -15,7 +16,6 @@ from json import JSONDecodeError
 dotenv.load_dotenv()
 router = APIRouter()
 
-import logging
 
 logger = logging.getLogger('uvicorn')
 
@@ -83,7 +83,7 @@ async def oauth_exchange(request: Request):
     logger.info("\n\n\nBody:")
     logger.info(body.decode())
     logger.info("\n\n\n")
-    
+
     try:
         data = await request.json()
         code = data.get('code')
@@ -93,10 +93,11 @@ async def oauth_exchange(request: Request):
 
     if not code:
         raise HTTPException(status_code=400, detail="Code not provided!")
-    
+
     user = fetch_user_by_id(code)
     if not user:
-        raise HTTPException(status_code=400, detail="Incorrect email or password!")
+        raise HTTPException(
+            status_code=400, detail="Incorrect email or password!")
 
     return {
         "access_token": create_access_token(user[0][0]),
