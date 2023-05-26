@@ -11,7 +11,7 @@
     "authorization_url": "base_url/oauth/token",
     "authorization_content_type": "application/json",
     "verification_tokens": {
-        "openai": "d4d7f6b942f140b0b225511148607d80"
+        "openai": "eb75807f51c541e4a76e7330aa6e2584"
     }
 },
   "api": {
